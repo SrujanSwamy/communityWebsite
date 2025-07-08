@@ -3,7 +3,7 @@
 
 A comprehensive community platform designed to connect and serve community members through seamless membership management, event coordination, and real-time announcements. Built with modern technologies to deliver an exceptional user experience and secure access control.
 
-Check out the live website here: [Click here](https://srujanprojects.vercel.app)
+Check out the live website here: [Click here](https://communitymanagement.netlify.app)
 
 ## Features
 
