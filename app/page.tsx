@@ -2,6 +2,8 @@ import Carousel from "./components/Carousel"
 import CommunityMessages from "./components/CommunityMessages"
 import NewsEvents from "./components/NewsEvents"
 import WelcomeHero from "./components/WelcomeHero"
+import FootprintsTimeline from "./components/FootprintsTimeline"
+import Leadership from "./components/Leadership"
 
 export default function Home() {
   return (
@@ -9,6 +11,8 @@ export default function Home() {
       <WelcomeHero />
       <Carousel />
       <CommunityMessages />
+      <Leadership />
+      <FootprintsTimeline />
       <NewsEvents />
     </div>
   )

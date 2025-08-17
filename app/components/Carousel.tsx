@@ -7,9 +7,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const images = [
-  { id: 1, src: "/placeholder.svg?height=400&width=800&text=Community+Event", alt: "Community Event" },
-  { id: 2, src: "/placeholder.svg?height=400&width=800&text=Cultural+Festival", alt: "Cultural Festival" },
-  { id: 3, src: "/placeholder.svg?height=400&width=800&text=Charity+Drive", alt: "Charity Drive" },
+  { id: 1, src: "/mahammaaye.jpg", alt: "" },
+  { id: 2, src: "/mahammaye_amma.jpg", alt: "" },
+  { id: 3, src: "/ganapathi.jpg", alt: "" },
 ]
 
 export default function Carousel() {
@@ -31,7 +31,7 @@ export default function Carousel() {
   }
 
   return (
-    <div className="relative w-full h-[400px] overflow-hidden">
+    <div className="relative w-full h-[400px] overflow-hidden bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
       <AnimatePresence initial={false} custom={currentImage}>
         <motion.div
           key={currentImage}
@@ -40,17 +40,22 @@ export default function Carousel() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute inset-0"
+          className="absolute inset-0 flex items-center justify-center"
         >
           <Image
             src={images[currentImage].src || "/placeholder.svg"}
             alt={images[currentImage].alt}
-            fill
-            className="object-cover"
+            width={0}
+            height={0}
+            sizes="100vw"
+            className="object-contain w-full h-full"
+            style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}
           />
-          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-            <h2 className="text-white text-3xl font-bold text-center px-4">{images[currentImage].alt}</h2>
-          </div>
+          {images[currentImage].alt && (
+            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+              <h2 className="text-white text-3xl font-bold text-center px-4">{images[currentImage].alt}</h2>
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
       <Button
@@ -64,7 +69,7 @@ export default function Carousel() {
       <Button
         variant="outline"
         size="icon"
-        className="absolute top-1/2 right-4 -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
+        className="absolute top-1/2 right-4 -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-90"
         onClick={nextImage}
       >
         <ChevronRight className="h-6 w-6" />
@@ -73,7 +78,9 @@ export default function Carousel() {
         {images.map((_, index) => (
           <button
             key={index}
-            className={`w-3 h-3 rounded-full ${index === currentImage ? "bg-white" : "bg-white bg-opacity-50"}`}
+            className={`w-3 h-3 rounded-full transition-all duration-200 ${
+              index === currentImage ? "bg-white scale-110" : "bg-white bg-opacity-50 hover:bg-opacity-75"
+            }`}
             onClick={() => setCurrentImage(index)}
           />
         ))}
@@ -81,4 +88,3 @@ export default function Carousel() {
     </div>
   )
 }
-

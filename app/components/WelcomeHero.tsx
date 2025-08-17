@@ -17,9 +17,11 @@ export default function WelcomeHero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8 }}
-          className="text-4xl md:text-5xl font-bold mb-4"
+          className="text-3xl md:text-3xl font-bold mb-4"
         >
-          Welcome to Mangalore Hindu Community
+          Welcome to <br></br> D.K. DISTRICT MARATI SAMAJA SEVA SANGHA ® MANGALORE <br></br>
+                    AND <br></br>
+                    MARATI WOMEN’S CLUB, MANGALORE
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}

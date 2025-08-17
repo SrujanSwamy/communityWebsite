@@ -90,18 +90,33 @@ export default function Navigation() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link href="/about/footprints" className="w-full">
-                Footprints
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
               <Link href="/about/management-committee" className="w-full">
-                Management Committee
+                Executive Committee
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link href="/about/office-bearers" className="w-full">
-                Office Bearers
+              <Link href="/about/PoshakaSadasyaru" className="w-full">
+                Poshaka Sadasyaru
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/about/MahaPoshakaru" className="w-full">
+                Mahaposhakaru
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/about/LifeTimeMembers" className="w-full">
+               Life-time Members
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/about/DeceasedMembers" className="w-full">
+                Deceased Members
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/about/BuidingCommitte" className="w-full">
+                Buiding Committe 
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -116,7 +131,7 @@ export default function Navigation() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="default" className="bg-[#B22222] hover:bg-[#8B0000] text-white">
-              Activities <ChevronDown className="ml-1 h-4 w-4" />
+              Announcements <ChevronDown className="ml-1 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="bg-[#FFF3E0] text-[#4A2C2A]">
@@ -133,9 +148,9 @@ export default function Navigation() {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <Link href="/contributors" passHref>
+        <Link href="/donors" passHref>
           <Button variant="default" className="bg-[#B22222] hover:bg-[#8B0000] text-white">
-            Contributors
+            Donors
           </Button>
         </Link>
         
