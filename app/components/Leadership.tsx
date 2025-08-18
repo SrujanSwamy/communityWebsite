@@ -139,10 +139,10 @@ export default function Leadership() {
                       }}
                     />
                   </div>
-                  <CardTitle className="text-[#B22222] text-lg">{member.position}</CardTitle>
+                  <CardTitle className="text-gray-800 text-lg font-semibold">{member.name || "Name not available"}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow pt-0">
-                  <p className="font-semibold text-gray-800 text-lg">{member.name || "Name not available"}</p>
+                  <p className="text-[#B22222] text-base font-medium">{member.position}</p>
                 </CardContent>
               </Card>
             </motion.div>
