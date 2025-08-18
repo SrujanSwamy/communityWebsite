@@ -1,136 +1,361 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { User, Search, ChevronLeft, ChevronRight, Award, Users } from "lucide-react"
+import { createClient } from "@/utils/supabase/client"
+import { toast } from "@/components/ui/use-toast"
 import Image from "next/image"
 
-interface CommitteeMember {
+interface ExecutiveMember {
+  id: number
   name: string
   position: string
-  description: string
-  image: string
-  achievements: string[]
+  description: string | null
+  photo: string | null
+  achievements: string[] | null
+  created_at: string
 }
 
-const committeeMembers: CommitteeMember[] = [
-  {
-    name: "Rajesh Patil",
-    position: "President",
-    description:
-      "Rajesh has been leading our community organization for the past 5 years, bringing innovative ideas and fostering growth.",
-    image: "/placeholder.svg?height=400&width=300&text=Rajesh+Patil",
-    achievements: [
-      "Increased community engagement by 50%",
-      "Launched annual Marathi literature festival",
-      "Established partnerships with 5 international Marathi organizations",
-    ],
-  },
-  {
-    name: "Sunita Deshmukh",
-    position: "Vice President",
-    description:
-      "Sunita oversees our cultural programs and ensures that our events truly represent the essence of Marathi culture.",
-    image: "/placeholder.svg?height=400&width=300&text=Sunita+Deshmukh",
-    achievements: [
-      "Curated 20+ cultural events annually",
-      "Introduced youth mentorship program",
-      "Received state recognition for cultural preservation efforts",
-    ],
-  },
-  {
-    name: "Amit Joshi",
-    position: "Secretary",
-    description: "Amit manages the day-to-day operations of our organization and coordinates with various committees.",
-    image: "/placeholder.svg?height=400&width=300&text=Amit+Joshi",
-    achievements: [
-      "Streamlined administrative processes",
-      "Implemented digital record-keeping system",
-      "Organized successful fundraising campaigns",
-    ],
-  },
-  {
-    name: "Priya Kulkarni",
-    position: "Treasurer",
-    description:
-      "Priya handles our finances and ensures that our resources are utilized effectively for community development.",
-    image: "/placeholder.svg?height=400&width=300&text=Priya+Kulkarni",
-    achievements: [
-      "Increased annual budget by 30%",
-      "Secured grants for community projects",
-      "Implemented transparent financial reporting system",
-    ],
-  },
-]
+const MEMBERS_PER_PAGE = 8 // Fewer per page for executive members
 
-export default function ManagementCommitteePage() {
-  const [selectedMember, setSelectedMember] = useState<CommitteeMember | null>(null)
+export default function ExecutiveMembersPage() {
+  const [members, setMembers] = useState<ExecutiveMember[]>([])
+  const [selectedMember, setSelectedMember] = useState<ExecutiveMember | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalMembers, setTotalMembers] = useState(0)
+  const [filteredMembers, setFilteredMembers] = useState<ExecutiveMember[]>([])
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    fetchMembers()
+  }, [currentPage])
+
+  useEffect(() => {
+    // Filter members based on search term
+    if (searchTerm.trim() === "") {
+      setFilteredMembers(members)
+    } else {
+      const filtered = members.filter(member =>
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (member.description && member.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+      setFilteredMembers(filtered)
+    }
+  }, [members, searchTerm])
+
+  const fetchMembers = async () => {
+    try {
+      setLoading(true)
+      
+      // Get total count for pagination
+      const { count, error: countError } = await supabase
+        .from("ExecutiveMembers")
+        .select("*", { count: "exact", head: true })
+
+      if (countError) {
+        console.error("Error getting member count:", countError)
+      } else {
+        setTotalMembers(count || 0)
+      }
+
+      // Get members for current page
+      const from = (currentPage - 1) * MEMBERS_PER_PAGE
+      const to = from + MEMBERS_PER_PAGE - 1
+
+      const { data, error } = await supabase
+        .from("ExecutiveMembers")
+        .select(`
+          id,
+          name,
+          position,
+          description,
+          photo,
+          achievements,
+          created_at
+        `)
+        .order("position", { ascending: true }) // Order by position for hierarchy
+        .range(from, to)
+
+      if (error) {
+        console.error("Error fetching members:", error)
+        toast({
+          title: "Error",
+          description: `Failed to fetch members: ${error.message}`,
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (data) {
+        setMembers(data)
+      }
+    } catch (error) {
+      console.error("Fetch error:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while fetching members",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const totalPages = Math.ceil(totalMembers / MEMBERS_PER_PAGE)
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  if (loading && members.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#FFF9E6] py-8 px-4">
+        <div className="container mx-auto">
+          <div className="bg-black py-6 mb-12">
+            <div className="flex items-center justify-center mb-2">
+              <Users className="w-8 h-8 text-white mr-3" />
+              <h1 className="text-3xl font-bold text-white">Executive Committee</h1>
+            </div>
+            <p className="text-center text-white opacity-75">Leadership Team</p>
+          </div>
+          <div className="flex justify-center items-center h-64">
+            <div className="text-[#B22222] text-lg">Loading members...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF9E6] py-8 px-4">
       <div className="container mx-auto">
         <div className="bg-black py-6 mb-12">
-          <h1 className="text-3xl font-bold text-center text-white">Management Committee</h1>
+          <div className="flex items-center justify-center mb-2">
+            <Users className="w-8 h-8 text-white mr-3" />
+            <h1 className="text-3xl font-bold text-white">Executive Committee</h1>
+          </div>
+          <p className="text-center text-white opacity-75">Leadership Team</p>
         </div>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {committeeMembers.map((member, index) => (
+        
+        {/* Search Bar */}
+        <div className="mb-8 max-w-md mx-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Input
+              type="text"
+              placeholder="Search by name, position, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 border-2 border-[#B22222] focus:border-[#8B0000]"
+            />
+          </div>
+        </div>
+
+        {/* Members Count */}
+        <div className="mb-6 text-center">
+          <p className="text-[#4A2C2A] text-lg">
+            {searchTerm ? `${filteredMembers.length} members found` : `Total: ${totalMembers} executive members`}
+          </p>
+        </div>
+
+        {/* Members Grid */}
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredMembers.map((member, index) => (
             <motion.div
-              key={member.name}
+              key={member.id}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Card
-                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-transform duration-300 hover:scale-105"
+                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 onClick={() => setSelectedMember(member)}
               >
                 <div className="relative h-48">
-                  <Image
-                    src={member.image || "/placeholder.svg"}
-                    alt={member.name}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
+                  {member.photo ? (
+                    <Image
+                      src={member.photo}
+                      alt={member.name}
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        // Fallback to default avatar if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`fallback-avatar absolute inset-0 bg-[#B22222] flex items-center justify-center ${member.photo ? 'hidden' : ''}`}>
+                    <User className="w-16 h-16 text-white" />
+                  </div>
+                  
+                  {/* Executive badge */}
+                  <div className="absolute top-2 right-2">
+                    <div className="bg-[#B22222] text-white px-2 py-1 rounded-full text-xs flex items-center">
+                      <Users className="w-3 h-3 mr-1" />
+                      Executive
+                    </div>
+                  </div>
                 </div>
                 <CardContent className="p-4">
                   <h2 className="text-xl font-bold text-[#B22222] mb-1">{member.name}</h2>
                   <h3 className="text-lg font-semibold text-[#4A2C2A] mb-2">{member.position}</h3>
-                  <p className="text-[#4A2C2A] text-sm line-clamp-3">{member.description}</p>
+                  {member.description && (
+                    <p className="text-[#4A2C2A] text-sm line-clamp-3">{member.description}</p>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
           ))}
         </div>
+
+        {/* No Results */}
+        {filteredMembers.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <div className="flex flex-col items-center">
+              <Users className="w-16 h-16 text-[#B22222] mb-4 opacity-50" />
+              <p className="text-[#4A2C2A] text-lg">
+                {searchTerm ? "No executive members found matching your search." : "No executive members available."}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!searchTerm && totalPages > 1 && (
+          <div className="mt-12 flex justify-center items-center space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+              className="border-[#B22222] text-[#B22222] hover:bg-[#B22222] hover:text-white"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            
+            <div className="flex items-center space-x-2">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    onClick={() => handlePageChange(pageNum)}
+                    disabled={loading}
+                    className={
+                      currentPage === pageNum
+                        ? "bg-[#B22222] text-white hover:bg-[#8B0000]"
+                        : "border-[#B22222] text-[#B22222] hover:bg-[#B22222] hover:text-white"
+                    }
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || loading}
+              className="border-[#B22222] text-[#B22222] hover:bg-[#B22222] hover:text-white"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
+
+        {/* Page Info */}
+        {!searchTerm && totalPages > 1 && (
+          <div className="mt-4 text-center text-[#4A2C2A] text-sm">
+            Page {currentPage} of {totalPages}
+          </div>
+        )}
       </div>
+
+      {/* Member Detail Modal */}
       <AnimatePresence>
         {selectedMember && (
           <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
             <DialogContent className="bg-white border-2 border-[#B22222] max-w-3xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl text-[#B22222] flex items-center mb-4">
-                  <Image
-                    src={selectedMember.image || "/placeholder.svg"}
-                    alt={selectedMember.name}
-                    width={100}
-                    height={100}
-                    className="rounded-full mr-4"
-                  />
+                  <div className="mr-4">
+                    {selectedMember.photo ? (
+                      <Image
+                        src={selectedMember.photo}
+                        alt={selectedMember.name}
+                        width={100}
+                        height={100}
+                        className="rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`fallback-avatar w-24 h-24 bg-[#B22222] rounded-full flex items-center justify-center ${selectedMember.photo ? 'hidden' : ''}`}>
+                      <User className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
                   <div>
                     <h2>{selectedMember.name}</h2>
-                    <h3 className="text-lg text-[#4A2C2A]">{selectedMember.position}</h3>
+                    <h3 className="text-lg text-[#4A2C2A] font-normal">{selectedMember.position}</h3>
                   </div>
                 </DialogTitle>
-                <DialogDescription className="text-[#4A2C2A]">
-                  <p className="mb-4">{selectedMember.description}</p>
-                  <h4 className="text-lg font-semibold text-[#B22222] mb-2">Key Achievements:</h4>
-                  <ul className="list-disc pl-5">
-                    {selectedMember.achievements.map((achievement, index) => (
-                      <li key={index} className="mb-1">
-                        {achievement}
-                      </li>
-                    ))}
-                  </ul>
+                <DialogDescription className="text-[#4A2C2A] space-y-4">
+                  {selectedMember.description && (
+                    <p className="text-base leading-relaxed">{selectedMember.description}</p>
+                  )}
+                  
+                  {selectedMember.achievements && selectedMember.achievements.length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-semibold text-[#B22222] mb-3 flex items-center">
+                        <Award className="w-5 h-5 mr-2" />
+                        Key Achievements
+                      </h4>
+                      <ul className="list-disc pl-6 space-y-2">
+                        {selectedMember.achievements.map((achievement, index) => (
+                          <li key={index} className="text-[#4A2C2A]">
+                            {achievement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {/* Executive Committee Badge */}
+                  <div className="flex items-center justify-center pt-4">
+                    <div className="bg-[#B22222] text-white px-4 py-2 rounded-full flex items-center">
+                      <Users className="w-4 h-4 mr-2" />
+                      <span>Executive Committee Member</span>
+                    </div>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
             </DialogContent>
@@ -140,4 +365,3 @@ export default function ManagementCommitteePage() {
     </div>
   )
 }
-

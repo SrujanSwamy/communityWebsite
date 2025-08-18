@@ -179,7 +179,7 @@ function ManageFootprintsPage() {
             >
               <CardHeader>
                 <CardTitle className="text-[#B22222]">
-                  {footprints.id}. {footprints.event_name} ({footprints.event_year})
+                   {footprints.event_name} ({footprints.event_year})
                 </CardTitle>
               </CardHeader>
               <CardContent>

@@ -88,7 +88,7 @@ function AdminDashboard() {
           </Button>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
-          <CommunityPage/>
+          
           {/* <Card className="bg-white border-2 border-[#B22222]">
             <CardHeader>
               <CardTitle className="text-[#B22222]">Customize About Content</CardTitle>
@@ -106,7 +106,7 @@ function AdminDashboard() {
                 </Button>
               </div>
             </CardContent>
-          </Card> */}
+          </Card> 
           <Card className="bg-white border-2 border-[#B22222]">
             <CardHeader>
               <CardTitle className="text-[#B22222]">Customize Contact Information</CardTitle>
@@ -124,7 +124,7 @@ function AdminDashboard() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
           <Card className="bg-white border-2 border-[#B22222] md:col-span-2">
             <CardHeader>
               <CardTitle className="text-[#B22222]">Approval Requests</CardTitle>
@@ -185,6 +185,32 @@ function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="mt-8 space-y-4">
+          <h2 className="text-2xl font-bold text-[#B22222]">Members Management</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+             <Link href="/admin/leadership">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Leadership</Button>
+            </Link>
+             <Link href="/admin/committee">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Committee Members</Button>
+            </Link>
+            <Link href="/admin/poshakasadasyaru">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Poshaka Sadasyaru</Button>
+            </Link>
+            <Link href="/admin/mahaposhakaru">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Mahaposhakaru</Button>
+            </Link>
+            <Link href="/admin/deceasedmembers">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Deceased Members</Button>
+            </Link>
+            <Link href="/admin/buildingcommitte">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Building Committe</Button>
+            </Link>
+            
+          </div>
+        </div>
+      
         <div className="mt-8 space-y-4">
           <h2 className="text-2xl font-bold text-[#B22222]">Website Management</h2>
           <div className="grid gap-4 md:grid-cols-3">
@@ -194,17 +220,17 @@ function AdminDashboard() {
             <Link href="/admin/events">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Events</Button>
             </Link>
-            <Link href="/admin/committee">
-              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Committee Members</Button>
-            </Link>
             <Link href="/admin/moving-announcement">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Moving Announcement</Button>
             </Link>
-            <Link href="/admin/footer">
+            {/* <Link href="/admin/footer">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Footer</Button>
-            </Link>
+            </Link> */}
             <Link href="/admin/contact">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Contact Information</Button>
+            </Link>
+             <Link href="/admin/about/footprints">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Footprints</Button>
             </Link>
             <Link href="/admin/carousel">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Carousel</Button>
@@ -212,17 +238,14 @@ function AdminDashboard() {
             {/* <Link href="/admin/navigation">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Navigation</Button>
             </Link> */}
-            <Link href="/admin/welcome-hero">
+            {/*<Link href="/admin/welcome-hero">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Welcome Hero</Button>
-            </Link>
-            <Link href="/admin/contributors">
-              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Manage Contributors</Button>
-            </Link>
-            <Link href="/admin/about/footprints">
-              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Footprints</Button>
-            </Link>
+            </Link> */}
+           
           </div>
         </div>
+
+        <CommunityPage/>
       </div>
     </div>
   )

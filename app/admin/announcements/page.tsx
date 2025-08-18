@@ -179,7 +179,7 @@ function ManageAnnouncementsPage() {
             >
               <CardHeader>
                 <CardTitle className="text-[#B22222]">
-                  {announcement.id}. {announcement.name} 
+                   {announcement.name} 
                 </CardTitle>
               </CardHeader>
               <CardContent>

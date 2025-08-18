@@ -115,8 +115,8 @@ export default function Navigation() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link href="/about/BuidingCommitte" className="w-full">
-                Buiding Committe 
+              <Link href="/about/BuildingCommittee" className="w-full">
+                Building Committe 
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
