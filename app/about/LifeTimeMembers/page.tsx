@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { User, Phone, MapPin, Briefcase, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { User, Phone, MapPin, Briefcase, Search, ChevronLeft, ChevronRight, FileText, IdCard } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 
@@ -22,10 +22,36 @@ interface Member {
   country: string
   pincode: number
   documents: string | null
+  photo: string | null
+  adhar_card: string | null
+  role: string
   created_at: string
 }
 
 const MEMBERS_PER_PAGE = 12
+
+// Helper function to optimize Cloudinary URLs
+const optimizeCloudinaryUrl = (url: string, width: number, height: number, quality: string = "auto") => {
+  if (!url || !url.includes('cloudinary.com')) {
+    return url
+  }
+  
+  // Add transformation parameters to Cloudinary URL
+  const parts = url.split('/upload/')
+  if (parts.length === 2) {
+    return `${parts[0]}/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/${parts[1]}`
+  }
+  
+  return url
+}
+
+// Helper function to check if URL is a valid image
+const isImageUrl = (url: string | null): boolean => {
+  if (!url) return false
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
+  const lowerUrl = url.toLowerCase()
+  return imageExtensions.some(ext => lowerUrl.includes(ext)) || url.includes('cloudinary.com')
+}
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([])
@@ -51,7 +77,8 @@ export default function MembersPage() {
         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         member.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
         member.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.state.toLowerCase().includes(searchTerm.toLowerCase())
+        member.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email_id.toLowerCase().includes(searchTerm.toLowerCase())
       )
       setFilteredMembers(filtered)
     }
@@ -68,6 +95,11 @@ export default function MembersPage() {
 
       if (countError) {
         console.error("Error getting member count:", countError)
+        toast({
+          title: "Error",
+          description: `Failed to get member count: ${countError.message}`,
+          variant: "destructive",
+        })
       } else {
         setTotalMembers(count || 0)
       }
@@ -90,6 +122,9 @@ export default function MembersPage() {
           country,
           pincode,
           documents,
+          photo,
+          adhar_card,
+          role,
           created_at
         `)
         .order("name", { ascending: true })
@@ -133,6 +168,32 @@ export default function MembersPage() {
     return parts.join(", ")
   }
 
+  // Component for member avatar
+  const MemberAvatar = ({ member, size = "w-16 h-16" }: { member: Member, size?: string }) => {
+    if (member.photo && isImageUrl(member.photo)) {
+      const optimizedPhoto = optimizeCloudinaryUrl(member.photo, 64, 64, "auto")
+      return (
+        <img
+          src={optimizedPhoto}
+          alt={`${member.name}'s photo`}
+          className={`${size} rounded-full object-cover border-2 border-white shadow-md`}
+          onError={(e) => {
+            // Fallback to default avatar if image fails to load
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+            target.nextElementSibling?.classList.remove('hidden')
+          }}
+        />
+      )
+    }
+    
+    return (
+      <div className={`${size} bg-[#B22222] rounded-full flex items-center justify-center`}>
+        <User className="w-8 h-8 text-white" />
+      </div>
+    )
+  }
+
   if (loading && members.length === 0) {
     return (
       <div className="min-h-screen bg-[#FFF9E6] py-8 px-4">
@@ -161,7 +222,7 @@ export default function MembersPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
               type="text"
-              placeholder="Search members by name, profession, or location..."
+              placeholder="Search members by name, profession, location, or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 border-2 border-[#B22222] focus:border-[#8B0000]"
@@ -191,9 +252,12 @@ export default function MembersPage() {
               >
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center space-y-3">
-                    {/* Avatar */}
-                    <div className="w-16 h-16 bg-[#B22222] rounded-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-white" />
+                    {/* Avatar with photo */}
+                    <div className="relative">
+                      <MemberAvatar member={member} />
+                      <div className={`w-16 h-16 bg-[#B22222] rounded-full flex items-center justify-center ${member.photo && isImageUrl(member.photo) ? 'hidden' : ''}`}>
+                        <User className="w-8 h-8 text-white" />
+                      </div>
                     </div>
                     
                     {/* Name */}
@@ -300,30 +364,40 @@ export default function MembersPage() {
       <AnimatePresence>
         {selectedMember && (
           <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
-            <DialogContent className="bg-white border-2 border-[#B22222] max-w-2xl">
+            <DialogContent className="bg-white border-2 border-[#B22222] max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-2xl text-[#B22222] flex items-center mb-4">
-                  <div className="w-16 h-16 bg-[#B22222] rounded-full flex items-center justify-center mr-4">
-                    <User className="w-8 h-8 text-white" />
+                  <div className="relative mr-4">
+                    <MemberAvatar member={selectedMember} />
+                    <div className={`w-16 h-16 bg-[#B22222] rounded-full flex items-center justify-center ${selectedMember.photo && isImageUrl(selectedMember.photo) ? 'hidden' : ''}`}>
+                      <User className="w-8 h-8 text-white" />
+                    </div>
                   </div>
                   <div>
                     <h2>{selectedMember.name}</h2>
                     <h3 className="text-lg text-[#4A2C2A] font-normal">{selectedMember.profession}</h3>
+                    {selectedMember.role !== 'user' && (
+                      <div className="mt-1">
+                        <span className="px-2 py-1 bg-[#B22222] text-white text-xs rounded-full">
+                          {selectedMember.role.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </DialogTitle>
-                <DialogDescription className="text-[#4A2C2A] space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+                <DialogDescription className="text-[#4A2C2A] space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
                     {/* Contact Information */}
                     <div>
                       <h4 className="text-lg font-semibold text-[#B22222] mb-3">Contact Information</h4>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-3 text-[#B22222]" />
                           <span>{selectedMember.phone_no}</span>
                         </div>
                         <div className="flex items-center">
                           <User className="w-4 h-4 mr-3 text-[#B22222]" />
-                          <span>{selectedMember.email_id}</span>
+                          <span className="break-all">{selectedMember.email_id}</span>
                         </div>
                       </div>
                     </div>
@@ -343,28 +417,74 @@ export default function MembersPage() {
                   
                   {/* Professional Information */}
                   <div>
-                    <h4 className="text-lg font-semibold text-[#B22222] mb-2">Professional Information</h4>
+                    <h4 className="text-lg font-semibold text-[#B22222] mb-3">Professional Information</h4>
                     <div className="flex items-center">
                       <Briefcase className="w-4 h-4 mr-3 text-[#B22222]" />
                       <span>{selectedMember.profession}</span>
                     </div>
                   </div>
+
+                  {/* Documents and Files Section */}
+                  <div className="space-y-4">
+                    
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Profile Photo */}
+                      {selectedMember.photo && (
+                        <div>
+                          <h4 className="font-medium text-[#4A2C2A] mb-2 flex items-center">
+                            <User className="w-4 h-4 mr-2" />
+                            Profile Photo
+                          </h4>
+                          {isImageUrl(selectedMember.photo) ? (
+                            <div className="border rounded-lg p-2">
+                              <img
+                                src={optimizeCloudinaryUrl(selectedMember.photo, 200, 200)}
+                                alt={`${selectedMember.name}'s profile`}
+                                className="w-full h-32 object-cover rounded"
+                              />
+                              <a
+                                href={selectedMember.photo}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#B22222] hover:underline text-sm mt-2 inline-block"
+                              >
+                                View Full Size
+                              </a>
+                            </div>
+                          ) : (
+                            <a
+                              href={selectedMember.photo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#B22222] hover:underline inline-flex items-center"
+                            >
+                              View Profile Photo
+                              <ChevronRight className="w-4 h-4 ml-1" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+
                   
-                  {/* Documents Link */}
-                  {selectedMember.documents && (
-                    <div>
-                      <h4 className="text-lg font-semibold text-[#B22222] mb-2">Documents</h4>
-                      <a
-                        href={selectedMember.documents}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#B22222] hover:underline inline-flex items-center"
-                      >
-                        View Documents
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </a>
+
+                      
                     </div>
-                  )}
+
+                   
+                  </div>
+
+                  {/* Member Since */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-[#B22222] mb-2">Member Since</h4>
+                    <p className="text-[#4A2C2A]">
+                      {new Date(selectedMember.created_at).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
             </DialogContent>

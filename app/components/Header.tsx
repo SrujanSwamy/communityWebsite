@@ -8,7 +8,7 @@ export default function Header() {
       <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
         <div className="flex items-center">
             <div className="rounded-full mr-[0.5em] overflow-hidden flex-shrink-0 bg-[#FFF3E0]" 
-                style={{width: '20%', height: '20%'}}>
+                style={{width: '18%', height: '18%'}}>
               <img 
                 src="/logo.jpg" 
                 alt="logo" 
@@ -16,7 +16,7 @@ export default function Header() {
               />
             </div>
             <Link href="/" className="font-bold leading-tight" 
-                  style={{fontSize: 'clamp(0.875rem, 2.5vw, 1.875rem)'}}>
+                  style={{fontSize: 'clamp(0.875rem, 2vw, 1.875rem)'}}>
               D.K. DISTRICT MARATI SAMAJA SEVA SANGHA ® MANGALORE <br/>
               AND<br/>
               MARATI WOMEN'S CLUB, MANGALORE

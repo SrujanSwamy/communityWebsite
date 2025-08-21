@@ -72,34 +72,28 @@ function ManageMahaposhakaruPage() {
     }
   };
 
-  // Placeholder function for Cloudflare upload
-  const uploadToCloudflare = async (file: File): Promise<string> => {
-    // TODO: Replace with actual Cloudflare API call
-    // For now, return a placeholder URL
+  // Updated Cloudinary upload function with folder support
+  const uploadToCloudinary = async (file: File): Promise<string> => {
     setUploading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'mahaposhakaru'); // Specific folder for Mahaposhakaru
       
-      // Placeholder URL - replace with actual Cloudflare response
-      const placeholderUrl = `https://placeholder-cloudflare-url.com/${file.name}`;
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
       
-      // TODO: Actual implementation would be:
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // const response = await fetch('CLOUDFLARE_API_ENDPOINT', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': 'Bearer YOUR_API_KEY'
-      //   },
-      //   body: formData
-      // });
-      // const result = await response.json();
-      // return result.url;
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
       
-      return placeholderUrl;
+      const result = await response.json();
+      return result.url;
     } catch (error) {
+      console.error('Upload error:', error);
       throw new Error("Failed to upload image");
     } finally {
       setUploading(false);
@@ -111,7 +105,7 @@ function ManageMahaposhakaruPage() {
     
     if (newPhoto) {
       try {
-        photoUrl = await uploadToCloudflare(newPhoto);
+        photoUrl = await uploadToCloudinary(newPhoto);
       } catch (error) {
         toast({
           title: "Error",
@@ -161,7 +155,7 @@ function ManageMahaposhakaruPage() {
     
     if (editPhoto) {
       try {
-        photoUrl = await uploadToCloudflare(editPhoto);
+        photoUrl = await uploadToCloudinary(editPhoto);
       } catch (error) {
         toast({
           title: "Error",
@@ -294,6 +288,11 @@ function ManageMahaposhakaruPage() {
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
+                  {newPhoto && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">Selected: {newPhoto.name}</p>
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button
@@ -401,7 +400,12 @@ function ManageMahaposhakaruPage() {
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
-              {editPhotoUrl && (
+              {editPhoto && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600">Selected: {editPhoto.name}</p>
+                </div>
+              )}
+              {editPhotoUrl && !editPhoto && (
                 <div className="mt-2">
                   <Image
                     src={editPhotoUrl}

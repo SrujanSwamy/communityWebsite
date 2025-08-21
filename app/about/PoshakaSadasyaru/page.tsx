@@ -20,6 +20,22 @@ interface PoshakaSadasya {
 
 const MEMBERS_PER_PAGE = 12
 
+
+// Helper function to optimize Cloudinary URLs
+const optimizeCloudinaryUrl = (url: string, width: number, height: number, quality: string = "auto") => {
+  if (!url || !url.includes('cloudinary.com')) {
+    return url
+  }
+  
+  // Add transformation parameters to Cloudinary URL
+  const parts = url.split('/upload/')
+  if (parts.length === 2) {
+    return `${parts[0]}/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/${parts[1]}`
+  }
+  
+  return url
+}
+
 export default function PoshakaSadasyaruPage() {
   const [members, setMembers] = useState<PoshakaSadasya[]>([])
   const [selectedMember, setSelectedMember] = useState<PoshakaSadasya | null>(null)
@@ -283,19 +299,24 @@ export default function PoshakaSadasyaruPage() {
               <DialogHeader>
                 <DialogTitle className="text-2xl text-[#B22222] flex flex-col items-center mb-4">
                   <div className="mb-4">
-                    {selectedMember.photo ? (
-                      <Image
-                        src={selectedMember.photo}
-                        alt={selectedMember.name}
-                        width={120}
-                        height={120}
-                        className="rounded-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
-                        }}
-                      />
+                   {selectedMember.photo ? (
+                                       <div className="relative w-24 h-24">
+                                         <Image
+                                           src={optimizeCloudinaryUrl(selectedMember.photo, 200, 200)}
+                                           alt={selectedMember.name || "Deceased Member"}
+                                           fill
+                                           className="rounded-full object-cover filter grayscale"
+                                           sizes="96px"
+                                           onError={(e) => {
+                                             const target = e.target as HTMLImageElement;
+                                             target.style.display = 'none';
+                                             const fallback = target.parentElement?.parentElement?.querySelector('.fallback-avatar');
+                                             if (fallback) {
+                                               fallback.classList.remove('hidden');
+                                             }
+                                           }}
+                                         />
+                                       </div>
                     ) : null}
                     <div className={`w-30 h-30 bg-[#B22222] rounded-full flex items-center justify-center ${selectedMember.photo ? 'hidden fallback-avatar' : ''}`}>
                       <User className="w-12 h-12 text-white" />

@@ -17,11 +17,25 @@ interface ExecutiveMember {
   position: string
   description: string | null
   photo: string | null
-  achievements: string[] | null
+  achivements: string[] | null
   created_at: string
 }
 
 const MEMBERS_PER_PAGE = 8 // Fewer per page for executive members
+
+const optimizeCloudinaryUrl = (url: string, width: number, height: number, quality: string = "auto") => {
+  if (!url || !url.includes('cloudinary.com')) {
+    return url
+  }
+  
+  // Add transformation parameters to Cloudinary URL
+  const parts = url.split('/upload/')
+  if (parts.length === 2) {
+    return `${parts[0]}/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/${parts[1]}`
+  }
+  
+  return url
+}
 
 export default function ExecutiveMembersPage() {
   const [members, setMembers] = useState<ExecutiveMember[]>([])
@@ -79,8 +93,7 @@ export default function ExecutiveMembersPage() {
           position,
           description,
           photo,
-          achievements,
-          created_at
+          achivements
         `)
         .order("position", { ascending: true }) // Order by position for hierarchy
         .range(from, to)
@@ -122,7 +135,7 @@ export default function ExecutiveMembersPage() {
     return (
       <div className="min-h-screen bg-[#FFF9E6] py-8 px-4">
         <div className="container mx-auto">
-          <div className="bg-black py-6 mb-12">
+          <div className="bg-black py-6 mb-12 rounded-lg">
             <div className="flex items-center justify-center mb-2">
               <Users className="w-8 h-8 text-white mr-3" />
               <h1 className="text-3xl font-bold text-white">Executive Committee</h1>
@@ -140,7 +153,7 @@ export default function ExecutiveMembersPage() {
   return (
     <div className="min-h-screen bg-[#FFF9E6] py-8 px-4">
       <div className="container mx-auto">
-        <div className="bg-black py-6 mb-12">
+        <div className="bg-black py-6 mb-12 rounded-lg">
           <div className="flex items-center justify-center mb-2">
             <Users className="w-8 h-8 text-white mr-3" />
             <h1 className="text-3xl font-bold text-white">Executive Committee</h1>
@@ -179,23 +192,28 @@ export default function ExecutiveMembersPage() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Card
-                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg h-full flex flex-col"
                 onClick={() => setSelectedMember(member)}
               >
-                <div className="relative h-48">
+                <div className="relative h-48 flex-shrink-0">
                   {member.photo ? (
-                    <Image
-                      src={member.photo}
-                      alt={member.name}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        // Fallback to default avatar if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
-                      }}
-                    />
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={optimizeCloudinaryUrl(member.photo, 300, 200)}
+                        alt={member.name || "Executive Member"}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.parentElement?.parentElement?.querySelector('.fallback-avatar');
+                          if (fallback) {
+                            fallback.classList.remove('hidden');
+                          }
+                        }}
+                      />
+                    </div>
                   ) : null}
                   <div className={`fallback-avatar absolute inset-0 bg-[#B22222] flex items-center justify-center ${member.photo ? 'hidden' : ''}`}>
                     <User className="w-16 h-16 text-white" />
@@ -203,17 +221,17 @@ export default function ExecutiveMembersPage() {
                   
                   {/* Executive badge */}
                   <div className="absolute top-2 right-2">
-                    <div className="bg-[#B22222] text-white px-2 py-1 rounded-full text-xs flex items-center">
+                    <div className="bg-[#B22222] text-white px-2 py-1 rounded-full text-xs flex items-center shadow-md">
                       <Users className="w-3 h-3 mr-1" />
                       Executive
                     </div>
                   </div>
                 </div>
-                <CardContent className="p-4">
+                <CardContent className="p-4 flex-grow flex flex-col">
                   <h2 className="text-xl font-bold text-[#B22222] mb-1">{member.name}</h2>
                   <h3 className="text-lg font-semibold text-[#4A2C2A] mb-2">{member.position}</h3>
                   {member.description && (
-                    <p className="text-[#4A2C2A] text-sm line-clamp-3">{member.description}</p>
+                    <p className="text-[#4A2C2A] text-sm line-clamp-3 flex-grow">{member.description}</p>
                   )}
                 </CardContent>
               </Card>
@@ -303,28 +321,33 @@ export default function ExecutiveMembersPage() {
           <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
             <DialogContent className="bg-white border-2 border-[#B22222] max-w-3xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl text-[#B22222] flex items-center mb-4">
-                  <div className="mr-4">
+                <DialogTitle className="text-2xl text-[#B22222] flex items-start mb-4">
+                  <div className="mr-4 flex-shrink-0">
                     {selectedMember.photo ? (
-                      <Image
-                        src={selectedMember.photo}
-                        alt={selectedMember.name}
-                        width={100}
-                        height={100}
-                        className="rounded-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
-                        }}
-                      />
+                      <div className="relative w-24 h-24">
+                        <Image
+                          src={optimizeCloudinaryUrl(selectedMember.photo, 200, 200)}
+                          alt={selectedMember.name}
+                          fill
+                          className="rounded-full object-cover"
+                          sizes="96px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.parentElement?.parentElement?.querySelector('.fallback-avatar');
+                            if (fallback) {
+                              fallback.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                      </div>
                     ) : null}
                     <div className={`fallback-avatar w-24 h-24 bg-[#B22222] rounded-full flex items-center justify-center ${selectedMember.photo ? 'hidden' : ''}`}>
                       <User className="w-10 h-10 text-white" />
                     </div>
                   </div>
-                  <div>
-                    <h2>{selectedMember.name}</h2>
+                  <div className="flex-grow">
+                    <h2 className="mb-1">{selectedMember.name}</h2>
                     <h3 className="text-lg text-[#4A2C2A] font-normal">{selectedMember.position}</h3>
                   </div>
                 </DialogTitle>
@@ -333,16 +356,16 @@ export default function ExecutiveMembersPage() {
                     <p className="text-base leading-relaxed">{selectedMember.description}</p>
                   )}
                   
-                  {selectedMember.achievements && selectedMember.achievements.length > 0 && (
+                  {selectedMember.achivements && selectedMember.achivements.length > 0 && (
                     <div>
                       <h4 className="text-lg font-semibold text-[#B22222] mb-3 flex items-center">
                         <Award className="w-5 h-5 mr-2" />
                         Key Achievements
                       </h4>
                       <ul className="list-disc pl-6 space-y-2">
-                        {selectedMember.achievements.map((achievement, index) => (
+                        {selectedMember.achivements.map((achivement, index) => (
                           <li key={index} className="text-[#4A2C2A]">
-                            {achievement}
+                            {achivement}
                           </li>
                         ))}
                       </ul>

@@ -42,6 +42,7 @@ function ManageExecutiveMembersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
   
   // Form states for adding new member
   const [newName, setNewName] = useState("");
@@ -62,177 +63,300 @@ function ManageExecutiveMembersPage() {
   const supabase = createClient();
 
   const fetchMembers = async () => {
-    const { data: memberData, error: memberError } = await supabase
-      .from("ExecutiveMembers")
-      .select("*")
-      .order("id", { ascending: true });
+    try {
+      const { data: memberData, error: memberError } = await supabase
+        .from("ExecutiveMembers")
+        .select("*")
+        .order("id", { ascending: true });
 
-    if (memberError) {
+      if (memberError) {
+        console.error("Fetch error:", memberError);
+        toast({
+          title: "Error",
+          description: `Failed to fetch executive members: ${memberError.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setMembers(memberData || []);
+    } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch executive members",
+        description: "An unexpected error occurred while fetching members",
         variant: "destructive",
       });
-      return;
-    } else {
-      setMembers(memberData);
     }
   };
 
-  // Placeholder function for Cloudflare upload
-  const uploadToCloudflare = async (file: File): Promise<string> => {
-    // TODO: Replace with actual Cloudflare API call
-    // For now, return a placeholder URL
+  // Validate image file
+  const validateImageFile = (file: File): boolean => {
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select a valid image file",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Image file size should be less than 5MB",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  // Fixed upload function with better error handling
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    if (!validateImageFile(file)) {
+      throw new Error("Invalid file");
+    }
+
     setUploading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'executivemembers');
       
-      // Placeholder URL - replace with actual Cloudflare response
-      const placeholderUrl = `https://placeholder-cloudflare-url.com/${file.name}`;
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
       
-      // TODO: Actual implementation would be:
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // const response = await fetch('CLOUDFLARE_API_ENDPOINT', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': 'Bearer YOUR_API_KEY'
-      //   },
-      //   body: formData
-      // });
-      // const result = await response.json();
-      // return result.url;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Upload response error:', errorText);
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+      }
       
-      return placeholderUrl;
+      const result = await response.json();
+      
+      if (!result.url) {
+        throw new Error("No URL returned from upload service");
+      }
+      
+      return result.url;
     } catch (error) {
-      throw new Error("Failed to upload image");
+      console.error('Upload error:', error);
+      throw error;
     } finally {
       setUploading(false);
     }
   };
 
+  // Validate URL format
+  const isValidUrl = (string: string): boolean => {
+    try {
+      new URL(string);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleAddMember = async () => {
-    let photoUrl = newPhotoUrl;
+    if (!newName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let photoUrl = newPhotoUrl.trim();
+    
+    // Validate URL if provided
+    if (photoUrl && !isValidUrl(photoUrl)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid photo URL",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (newPhoto) {
       try {
-        photoUrl = await uploadToCloudflare(newPhoto);
+        photoUrl = await uploadToCloudinary(newPhoto);
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to upload photo",
+          description: `Failed to upload photo: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: "destructive",
         });
         return;
       }
     }
 
-    const { data: insertData, error: insertError } = await supabase
-      .from("ExecutiveMembers")
-      .insert({
-        name: newName,
-        position: newPosition,
-        description: newDescription,
-        achivements: newAchievements,
-        photo: photoUrl,
-      });
+    try {
+      const { error: insertError } = await supabase
+        .from("ExecutiveMembers")
+        .insert({
+          name: newName.trim(),
+          position: newPosition.trim() || null,
+          description: newDescription.trim() || null,
+          achivements: newAchievements.trim() || null,
+          photo: photoUrl || null,
+        });
 
-    if (insertError) {
-      toast({
-        title: "Error",
-        description: "Failed to add executive member",
-        variant: "destructive",
-      });
-      return;
-    } else {
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        toast({
+          title: "Error",
+          description: `Failed to add executive member: ${insertError.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
         description: "Executive member added successfully",
       });
-    }
 
-    // Reset form
-    setNewName("");
-    setNewPosition("");
-    setNewDescription("");
-    setNewAchievements("");
-    setNewPhoto(null);
-    setNewPhotoUrl("");
-    setIsAddDialogOpen(false);
-    
-    fetchMembers();
+      // Reset form
+      setNewName("");
+      setNewPosition("");
+      setNewDescription("");
+      setNewAchievements("");
+      setNewPhoto(null);
+      setNewPhotoUrl("");
+      setIsAddDialogOpen(false);
+      
+      fetchMembers();
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditMember = async () => {
     if (!editingMember) return;
 
-    let photoUrl = editPhotoUrl;
+    if (!editName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let photoUrl = editPhotoUrl.trim();
+    
+    // Validate URL if provided
+    if (photoUrl && !isValidUrl(photoUrl)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid photo URL",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (editPhoto) {
       try {
-        photoUrl = await uploadToCloudflare(editPhoto);
+        photoUrl = await uploadToCloudinary(editPhoto);
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to upload photo",
+          description: `Failed to upload photo: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: "destructive",
         });
         return;
       }
     }
 
-    const { data: updateData, error: updateError } = await supabase
-      .from("ExecutiveMembers")
-      .update({
-        name: editName,
-        position: editPosition,
-        description: editDescription,
-        achivements: editAchievements,
-        photo: photoUrl,
-      })
-      .eq("id", editingMember.id);
+    try {
+      const { error: updateError } = await supabase
+        .from("ExecutiveMembers")
+        .update({
+          name: editName.trim(),
+          position: editPosition.trim() || null,
+          description: editDescription.trim() || null,
+          achivements: editAchievements.trim() || null,
+          photo: photoUrl || null,
+        })
+        .eq("id", editingMember.id);
 
-    if (updateError) {
-      toast({
-        title: "Error",
-        description: "Failed to update executive member",
-        variant: "destructive",
-      });
-      return;
-    } else {
+      if (updateError) {
+        console.error("Update error:", updateError);
+        toast({
+          title: "Error",
+          description: `Failed to update executive member: ${updateError.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
         description: "Executive member updated successfully",
       });
-    }
 
-    setEditingMember(null);
-    setIsEditDialogOpen(false);
-    fetchMembers();
+      setEditingMember(null);
+      setIsEditDialogOpen(false);
+      fetchMembers();
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteMember = async (id: number) => {
-    const { error: deleteError } = await supabase
-      .from("ExecutiveMembers")
-      .delete()
-      .eq("id", id);
-
-    if (deleteError) {
-      toast({
-        title: "Error",
-        description: "Failed to delete executive member",
-        variant: "destructive",
-      });
+    if (!confirm("Are you sure you want to delete this executive member?")) {
       return;
-    } else {
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from("ExecutiveMembers")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        toast({
+          title: "Error",
+          description: `Failed to delete executive member: ${deleteError.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
         description: "Executive member deleted successfully",
       });
+      
+      fetchMembers();
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
-    fetchMembers();
   };
 
   const openEditDialog = (member: ExecutiveMember) => {
@@ -244,6 +368,16 @@ function ManageExecutiveMembersPage() {
     setEditPhotoUrl(member.photo || "");
     setEditPhoto(null);
     setIsEditDialogOpen(true);
+  };
+
+  // Handle image load errors
+  const handleImageError = (memberId: number) => {
+    setImageErrors(prev => ({ ...prev, [memberId]: true }));
+  };
+
+  // Reset image error when URL changes
+  const resetImageError = (memberId: number) => {
+    setImageErrors(prev => ({ ...prev, [memberId]: false }));
   };
 
   useEffect(() => {
@@ -271,12 +405,13 @@ function ManageExecutiveMembersPage() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="newName">Name</Label>
+                    <Label htmlFor="newName">Name *</Label>
                     <Input
                       id="newName"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       className="border-[#B22222]"
+                      placeholder="Enter member name"
                       required
                     />
                   </div>
@@ -316,25 +451,52 @@ function ManageExecutiveMembersPage() {
                       id="newPhotoFile"
                       type="file"
                       accept="image/*"
-                      onChange={(e) => setNewPhoto(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setNewPhoto(file);
+                        if (file) setNewPhotoUrl(""); // Clear URL if file is selected
+                      }}
                       className="border-[#B22222]"
                     />
+                    <p className="text-sm text-gray-500">Max size: 5MB</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="newPhotoUrl">Or Photo URL</Label>
                     <Input
                       id="newPhotoUrl"
                       value={newPhotoUrl}
-                      onChange={(e) => setNewPhotoUrl(e.target.value)}
+                      onChange={(e) => {
+                        setNewPhotoUrl(e.target.value);
+                        if (e.target.value) setNewPhoto(null); // Clear file if URL is entered
+                      }}
                       className="border-[#B22222]"
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
+                  {newPhotoUrl && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                      <Image
+                        src={newPhotoUrl}
+                        alt="Preview"
+                        width={100}
+                        height={100}
+                        className="w-20 h-20 object-cover rounded-md border"
+                        onError={() => {
+                          toast({
+                            title: "Error",
+                            description: "Invalid image URL",
+                            variant: "destructive",
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button
                     onClick={handleAddMember}
-                    disabled={!newName || uploading}
+                    disabled={!newName.trim() || uploading}
                     className="bg-[#B22222] text-white hover:bg-[#8B0000]"
                   >
                     {uploading ? "Uploading..." : "Add Executive Member"}
@@ -357,7 +519,7 @@ function ManageExecutiveMembersPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-3">
-                {member.photo && (
+                {member.photo && !imageErrors[member.id] ? (
                   <div className="mb-4">
                     <Image
                       src={member.photo}
@@ -365,7 +527,17 @@ function ManageExecutiveMembersPage() {
                       width={200}
                       height={200}
                       className="w-full h-48 object-cover rounded-md"
+                      onError={() => handleImageError(member.id)}
+                      onLoad={() => resetImageError(member.id)}
                     />
+                  </div>
+                ) : member.photo ? (
+                  <div className="mb-4 w-full h-48 bg-gray-200 rounded-md flex items-center justify-center">
+                    <p className="text-gray-500 text-sm">Image failed to load</p>
+                  </div>
+                ) : (
+                  <div className="mb-4 w-full h-48 bg-gray-100 rounded-md flex items-center justify-center">
+                    <p className="text-gray-500 text-sm">No photo</p>
                   </div>
                 )}
                 {member.description && (
@@ -400,6 +572,12 @@ function ManageExecutiveMembersPage() {
           ))}
         </div>
 
+        {members.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No executive members found.</p>
+          </div>
+        )}
+
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
@@ -411,12 +589,13 @@ function ManageExecutiveMembersPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="editName">Name</Label>
+                <Label htmlFor="editName">Name *</Label>
                 <Input
                   id="editName"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="border-[#B22222]"
+                  placeholder="Enter member name"
                   required
                 />
               </div>
@@ -456,28 +635,44 @@ function ManageExecutiveMembersPage() {
                   id="editPhotoFile"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setEditPhoto(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setEditPhoto(file);
+                    if (file) setEditPhotoUrl(editingMember?.photo || ""); // Keep original URL if file is selected
+                  }}
                   className="border-[#B22222]"
                 />
+                <p className="text-sm text-gray-500">Max size: 5MB</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editPhotoUrl">Or Photo URL</Label>
                 <Input
                   id="editPhotoUrl"
                   value={editPhotoUrl}
-                  onChange={(e) => setEditPhotoUrl(e.target.value)}
+                  onChange={(e) => {
+                    setEditPhotoUrl(e.target.value);
+                    if (e.target.value !== editingMember?.photo) setEditPhoto(null); // Clear file if URL is changed
+                  }}
                   className="border-[#B22222]"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
               {editPhotoUrl && (
                 <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-2">Current/Preview:</p>
                   <Image
                     src={editPhotoUrl}
                     alt="Preview"
                     width={100}
                     height={100}
-                    className="w-20 h-20 object-cover rounded-md"
+                    className="w-20 h-20 object-cover rounded-md border"
+                    onError={() => {
+                      toast({
+                        title: "Error",
+                        description: "Invalid image URL",
+                        variant: "destructive",
+                      });
+                    }}
                   />
                 </div>
               )}
@@ -485,7 +680,7 @@ function ManageExecutiveMembersPage() {
             <DialogFooter>
               <Button
                 onClick={handleEditMember}
-                disabled={!editName || uploading}
+                disabled={!editName.trim() || uploading}
                 className="bg-[#B22222] text-white hover:bg-[#8B0000]"
               >
                 {uploading ? "Uploading..." : "Update Executive Member"}

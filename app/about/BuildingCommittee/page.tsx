@@ -20,6 +20,21 @@ interface BuildingCommitteeMember {
 
 const MEMBERS_PER_PAGE = 12
 
+// Helper function to optimize Cloudinary URLs
+const optimizeCloudinaryUrl = (url: string, width: number, height: number, quality: string = "auto") => {
+  if (!url || !url.includes('cloudinary.com')) {
+    return url
+  }
+  
+  // Add transformation parameters to Cloudinary URL
+  const parts = url.split('/upload/')
+  if (parts.length === 2) {
+    return `${parts[0]}/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/${parts[1]}`
+  }
+  
+  return url
+}
+
 export default function BuildingCommittee() {
   const [members, setMembers] = useState<BuildingCommitteeMember[]>([])
   const [selectedMember, setSelectedMember] = useState<BuildingCommitteeMember | null>(null)
@@ -75,7 +90,7 @@ export default function BuildingCommittee() {
           photo,
           designation
         `)
-        .order("name", { ascending: true }) // Order by name alphabetically, nulls last
+        .order("name", { ascending: true, nullsFirst: false })
         .range(from, to)
 
       if (error) {
@@ -185,19 +200,23 @@ export default function BuildingCommittee() {
                 
                 <CardHeader className="flex items-center justify-center pb-4">
                   {member.photo ? (
-                    <Image
-                      src={member.photo}
-                      alt={member.name || "Committee Member"}
-                      width={100}
-                      height={100}
-                      className="rounded-full object-cover"
-                      onError={(e) => {
-                        // Fallback to default avatar if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
-                      }}
-                    />
+                    <div className="relative w-24 h-24">
+                      <Image
+                        src={optimizeCloudinaryUrl(member.photo, 200, 200)}
+                        alt={member.name || "Committee Member"}
+                        fill
+                        className="rounded-full object-cover"
+                        sizes="96px"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.parentElement?.parentElement?.querySelector('.fallback-avatar');
+                          if (fallback) {
+                            fallback.classList.remove('hidden');
+                          }
+                        }}
+                      />
+                    </div>
                   ) : null}
                   <div className={`w-24 h-24 bg-[#B22222] rounded-full flex items-center justify-center ${member.photo ? 'hidden fallback-avatar' : ''}`}>
                     <User className="w-10 h-10 text-white" />
@@ -307,9 +326,9 @@ export default function BuildingCommittee() {
                 <DialogTitle className="text-2xl text-[#B22222] flex flex-col items-center mb-4">
                   <div className="mb-4 relative">
                     {selectedMember.photo ? (
-                      <div className="relative">
+                      <div className="relative w-30 h-30">
                         <Image
-                          src={selectedMember.photo}
+                          src={optimizeCloudinaryUrl(selectedMember.photo, 240, 240)}
                           alt={selectedMember.name || "Committee Member"}
                           width={120}
                           height={120}
@@ -317,7 +336,10 @@ export default function BuildingCommittee() {
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
-                            target.parentElement?.querySelector('.fallback-avatar')?.classList.remove('hidden');
+                            const fallback = target.parentElement?.parentElement?.querySelector('.fallback-avatar');
+                            if (fallback) {
+                              fallback.classList.remove('hidden');
+                            }
                           }}
                         />
                         <div className="absolute -top-2 -right-2">
