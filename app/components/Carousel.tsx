@@ -7,9 +7,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const images = [
-  { id: 1, src: "/mahammaaye.jpg", alt: "" },
-  { id: 2, src: "/mahammaye_amma.jpg", alt: "" },
-  { id: 3, src: "/ganapathi.jpg", alt: "" },
+  { id: 1, src: "/collage.jpg", alt: "" },
+  { id: 2, src: "/mahammaaye.jpg", alt: "" },
+  { id: 3, src: "/mahammaye_amma.jpg", alt: "" },
+  { id: 4, src: "/ganapathi.jpg", alt: "" },
 ]
 
 export default function Carousel() {
