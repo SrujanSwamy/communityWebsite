@@ -125,20 +125,19 @@ export function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className="bg-[#FFF3E0] text-[#B22222] border-2 border-[#B22222] hover:bg-[#FFE0B2] hover:text-[#8B0000] notranslate"
+          variant="outline" className="bg-[#FFF8DC] text-[#8B4513] border-2 border-[#CD853F] hover:bg-[#FFE4B5] hover:text-[#D2691E] hover:border-[#D2691E] shadow-md transition-all duration-200 hover:shadow-lg"
           data-current-lang
         >
           <Globe className="mr-2 h-4 w-4" />
           {languages.find((lang) => lang.code === currentLanguage)?.name || "Language"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-[#FFF3E0] border-2 border-[#B22222]">
+      <DropdownMenuContent align="end" className="bg-[#FFF8DC] border-2 border-[#8B4513]">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => handleLanguageChange(lang.code)}
-            className="text-[#B22222] hover:bg-[#FFE0B2] hover:text-[#8B0000] cursor-pointer notranslate"
+            className="text-[#8B4513] hover:bg-[#FFF8DC] hover:text-[#8B0000] cursor-pointer notranslate"
             data-lang-name={lang.code}
           >
             {lang.name}

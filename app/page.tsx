@@ -4,13 +4,15 @@ import NewsEvents from "./components/NewsEvents"
 import WelcomeHero from "./components/WelcomeHero"
 import FootprintsTimeline from "./components/FootprintsTimeline"
 import Leadership from "./components/Leadership"
+import VisionMission from "./components/VissionMission"
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-home-background text-home-text">
-      <WelcomeHero />
+      {/*<WelcomeHero />*/}
       <Carousel />
       <CommunityMessages />
+      <VisionMission />
       <Leadership />
       <FootprintsTimeline />
       <NewsEvents />

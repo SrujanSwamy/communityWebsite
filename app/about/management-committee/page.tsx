@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { User, Search, ChevronLeft, ChevronRight, Award, Users } from "lucide-react"
+import { User, Search, ChevronLeft, ChevronRight, Users } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -17,8 +17,7 @@ interface ExecutiveMember {
   position: string
   description: string | null
   photo: string | null
-  achivements: string[] | null
-  created_at: string
+  achivements: string | null
 }
 
 const MEMBERS_PER_PAGE = 8 // Fewer per page for executive members
@@ -81,7 +80,7 @@ export default function ExecutiveMembersPage() {
         setTotalMembers(count || 0)
       }
 
-      // Get members for current page
+      // Get members for current page - ORDER BY ID instead of position
       const from = (currentPage - 1) * MEMBERS_PER_PAGE
       const to = from + MEMBERS_PER_PAGE - 1
 
@@ -95,7 +94,7 @@ export default function ExecutiveMembersPage() {
           photo,
           achivements
         `)
-        .order("position", { ascending: true }) // Order by position for hierarchy
+        .order("id", { ascending: true }) // Order by ID for database insertion order
         .range(from, to)
 
       if (error) {
@@ -192,14 +191,15 @@ export default function ExecutiveMembersPage() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Card
-                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg h-full flex flex-col"
+                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg h-80 relative group"
                 onClick={() => setSelectedMember(member)}
               >
-                <div className="relative h-48 flex-shrink-0">
+                {/* Photo Background - Always Visible */}
+                <div className="absolute inset-0 h-full w-full">
                   {member.photo ? (
                     <div className="relative w-full h-full">
                       <Image
-                        src={optimizeCloudinaryUrl(member.photo, 300, 200)}
+                        src={optimizeCloudinaryUrl(member.photo, 400, 320)}
                         alt={member.name || "Executive Member"}
                         fill
                         className="object-cover"
@@ -218,22 +218,26 @@ export default function ExecutiveMembersPage() {
                   <div className={`fallback-avatar absolute inset-0 bg-[#B22222] flex items-center justify-center ${member.photo ? 'hidden' : ''}`}>
                     <User className="w-16 h-16 text-white" />
                   </div>
-                  
-                  {/* Executive badge */}
-                  <div className="absolute top-2 right-2">
-                    <div className="bg-[#B22222] text-white px-2 py-1 rounded-full text-xs flex items-center shadow-md">
-                      <Users className="w-3 h-3 mr-1" />
-                      Executive
-                    </div>
+                </div>
+
+                {/* Executive Badge - Always Visible */}
+                <div className="absolute top-3 right-3 z-10">
+                  <div className="bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center shadow-lg">
+                    <Users className="w-3 h-3 mr-1" />
+                    Executive
                   </div>
                 </div>
-                <CardContent className="p-4 flex-grow flex flex-col">
-                  <h2 className="text-xl font-bold text-[#B22222] mb-1">{member.name}</h2>
-                  <h3 className="text-lg font-semibold text-[#4A2C2A] mb-2">{member.position}</h3>
-                  {member.description && (
-                    <p className="text-[#4A2C2A] text-sm line-clamp-3 flex-grow">{member.description}</p>
-                  )}
-                </CardContent>
+
+                {/* Hover Overlay with Name and Position */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                  <div className="p-4 text-white w-full">
+                    <h2 className="text-xl font-bold mb-1 drop-shadow-lg">{member.name}</h2>
+                    <h3 className="text-base font-medium opacity-90 drop-shadow">{member.position}</h3>
+                  </div>
+                </div>
+
+                {/* Subtle hover indicator */}
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/30 transition-all duration-300 pointer-events-none"></div>
               </Card>
             </motion.div>
           ))}
@@ -353,22 +357,16 @@ export default function ExecutiveMembersPage() {
                 </DialogTitle>
                 <DialogDescription className="text-[#4A2C2A] space-y-4">
                   {selectedMember.description && (
-                    <p className="text-base leading-relaxed">{selectedMember.description}</p>
+                    <div>
+                      <h4 className="font-semibold text-[#B22222] mb-2">About</h4>
+                      <p className="text-base leading-relaxed">{selectedMember.description}</p>
+                    </div>
                   )}
                   
-                  {selectedMember.achivements && selectedMember.achivements.length > 0 && (
+                  {selectedMember.achivements && (
                     <div>
-                      <h4 className="text-lg font-semibold text-[#B22222] mb-3 flex items-center">
-                        <Award className="w-5 h-5 mr-2" />
-                        Key Achievements
-                      </h4>
-                      <ul className="list-disc pl-6 space-y-2">
-                        {selectedMember.achivements.map((achivement, index) => (
-                          <li key={index} className="text-[#4A2C2A]">
-                            {achivement}
-                          </li>
-                        ))}
-                      </ul>
+                      <h4 className="font-semibold text-[#B22222] mb-2">Achievements</h4>
+                      <p className="text-base leading-relaxed">{selectedMember.achivements}</p>
                     </div>
                   )}
                   
