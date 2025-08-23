@@ -16,7 +16,7 @@ interface AboutUs {
   created_at: string;
 }
 
-export default function CommunityPage() {
+export default function AboutUsPage() {
   const supabase = createClient();
   const [heading, setHeading] = useState("");
   const [aboutContent, setAboutContent] = useState("");
@@ -31,31 +31,39 @@ export default function CommunityPage() {
   const fetchAboutData = async () => {
     setLoading(true);
     try {
+      console.log("Fetching about data...");
+      
       const { data, error } = await supabase
         .from("AboutUs")
         .select("*")
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle no rows gracefully
+
+      console.log("Fetch result:", { data, error });
 
       if (error) {
-        // If no data exists yet, that's okay - we'll create new data
-        if (error.code !== 'PGRST116') {
-          console.error("Error fetching about data:", error);
-          toast({
-            title: "Error",
-            description: "Failed to fetch about information",
-            variant: "destructive",
-          });
-        }
+        console.error("Error fetching about data:", error);
+        toast({
+          title: "Error",
+          description: `Failed to fetch about information: ${error.message}`,
+          variant: "destructive",
+        });
       } else if (data) {
+        console.log("Setting data:", data);
         setAboutData(data);
         setHeading(data.heading || "");
         setAboutContent(data.description || "");
+      } else {
+        console.log("No existing data found, starting fresh");
+        // No existing data, start with empty form
+        setAboutData(null);
+        setHeading("");
+        setAboutContent("");
       }
     } catch (error) {
       console.error("Unexpected error:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch about information",
+        description: "An unexpected error occurred while fetching data",
         variant: "destructive",
       });
     } finally {
@@ -81,9 +89,12 @@ export default function CommunityPage() {
         description: aboutContent.trim(),
       };
 
+      console.log("Updating with data:", updateData);
+
       let result;
-      if (aboutData) {
+      if (aboutData?.id) {
         // Update existing record
+        console.log("Updating existing record with ID:", aboutData.id);
         result = await supabase
           .from("AboutUs")
           .update(updateData)
@@ -92,6 +103,7 @@ export default function CommunityPage() {
           .single();
       } else {
         // Insert new record
+        console.log("Inserting new record");
         result = await supabase
           .from("AboutUs")
           .insert([updateData])
@@ -99,29 +111,64 @@ export default function CommunityPage() {
           .single();
       }
 
+      console.log("Operation result:", result);
+
       if (result.error) {
-        console.error("Error updating about data:", result.error);
+        console.error("Database operation error:", result.error);
         toast({
           title: "Error",
-          description: "Failed to update about information",
+          description: `Failed to save: ${result.error.message}`,
           variant: "destructive",
         });
-      } else {
+      } else if (result.data) {
+        console.log("Successfully saved:", result.data);
         setAboutData(result.data);
         toast({
           title: "Success",
-          description: "About information updated successfully.",
+          description: aboutData?.id ? "About information updated successfully!" : "About information created successfully!",
         });
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Unexpected error during save:", error);
       toast({
         title: "Error",
-        description: "Failed to update about information",
+        description: "An unexpected error occurred while saving",
         variant: "destructive",
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // Test connection function
+  const testConnection = async () => {
+    try {
+      console.log("Testing database connection...");
+      const { data, error } = await supabase
+        .from("AboutUs")
+        .select("count", { count: "exact", head: true });
+      
+      console.log("Connection test result:", { data, error });
+      
+      if (error) {
+        toast({
+          title: "Connection Error",
+          description: `Database connection failed: ${error.message}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Connection Success",
+          description: "Database connection is working!",
+        });
+      }
+    } catch (error) {
+      console.error("Connection test error:", error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to test database connection",
+        variant: "destructive",
+      });
     }
   };
 
@@ -154,11 +201,11 @@ export default function CommunityPage() {
             <Card className="bg-white border-2 border-[#B22222]">
               <CardHeader>
                 <CardTitle className="text-[#B22222]">
-                  {aboutData ? "Update About Us Content" : "Create About Us Content"}
+                  {aboutData?.id ? "Update About Us Content" : "Create About Us Content"}
                 </CardTitle>
                 {aboutData && (
                   <p className="text-sm text-gray-600">
-                    Last updated: {new Date(aboutData.created_at).toLocaleDateString()}
+                    Last updated: {new Date(aboutData.created_at).toLocaleDateString()} (ID: {aboutData.id})
                   </p>
                 )}
               </CardHeader>
@@ -176,6 +223,9 @@ export default function CommunityPage() {
                       onChange={(e) => setHeading(e.target.value)}
                       className="border-[#B22222]"
                     />
+                    <p className="text-xs text-gray-500">
+                      Current value: "{heading}"
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
@@ -212,8 +262,8 @@ export default function CommunityPage() {
                       disabled={updating || !heading.trim() || !aboutContent.trim()}
                     >
                       {updating 
-                        ? "Updating..." 
-                        : aboutData 
+                        ? "Saving..." 
+                        : aboutData?.id 
                           ? "Update About Content" 
                           : "Create About Content"
                       }
@@ -224,30 +274,6 @@ export default function CommunityPage() {
             </Card>
           </form>
 
-         {/* 
-          {(heading.trim() || aboutContent.trim()) && (
-            <Card className="mt-6 bg-white border-2 border-[#B22222]">
-              <CardHeader>
-                <CardTitle className="text-[#B22222]">Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {heading.trim() && (
-                    <h2 className="text-2xl font-bold text-[#B22222]">
-                      {heading}
-                    </h2>
-                  )}
-                  {aboutContent.trim() && (
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                        {aboutContent}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )} */}
         </div>
       </div>
     </div>

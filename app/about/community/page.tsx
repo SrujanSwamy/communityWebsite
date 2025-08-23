@@ -1,64 +1,123 @@
 "use client"
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useState, useEffect } from "react";
-import { createClient } from "../../../utils/supabase/client";
-import { toast } from "../../../components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
+
+import { createClient } from "@/utils/supabase/client"
+
+// Supabase client simulation for demo
+const supabase = createClient()
 
 interface AboutUs {
-  heading:String,
-  description:String,
+  id: number;
+  heading: string;
+  description: string;
+  created_at?: string;
 }
 
 export default function AboutCommunityPage() {
   const [aboutUs, setAboutUs] = useState<AboutUs | null>(null);
+  const [loading, setLoading] = useState(true);
   
-    const supabase = createClient();
-    const fetchAboutUs= async () => {
-        const { data: aboutUsData, error: aboutUsError } = await supabase
-          .from("AboutUs")
-          .select("*")
-          .single()
-        if (aboutUsError) {
-          toast({
-            title: "Error",
-            description: "Failed to fetch aboutUs",
-            variant: "destructive",
-          });
-          
-          return;
-        }
-        setAboutUs(aboutUsData as AboutUs);
-      }
-      useEffect(() => {
-          fetchAboutUs();
-        }, []);
-  return (
-    <div className="container mx-auto py-8 px-4 bg-[#FAF3E0] min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-center text-[#B22222]">About Our Community</h1>
-      <Card className="bg-[#FFF3E0] border-[#B22222] border-2">
-        <CardHeader>
-          <CardTitle className="text-[#B22222]">{aboutUs?.heading}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-justify text-[#4A2C2A]">
-            {/* The Mangalore Hindu community is a vibrant and culturally rich group of people originating from the coastal
-            region of Karnataka, India. Our community is known for its strong traditions, literature, art, and cuisine,
-            deeply rooted in the Tulu culture. */}
-            {aboutUs?.description}
-          </p>
-          {/* <p className="mb-4 text-[#4A2C2A]">
-            Our organization aims to preserve and promote the unique Hindu traditions of Mangalore, including the
-            worship of local deities, celebration of festivals like Navaratri and Deepavali with a local flavor, and the
-            preservation of our Tulu language alongside Sanskrit and Kannada.
-          </p>
-          <p className="text-[#4A2C2A]">
-            Whether you're a native of Mangalore or someone interested in learning about our culture, we welcome you to
-            join our community and participate in our diverse range of activities and events that showcase the rich
-            heritage of Tulu Nadu.
-          </p> */}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
+  const supabase = createClient();
 
+  const fetchAboutUs = async () => {
+    try {
+      setLoading(true);
+      const { data: aboutUsData, error: aboutUsError } = await supabase
+        .from("AboutUs")
+        .select("*")
+        .single();
+
+      if (aboutUsError) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch about us information",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setAboutUs(aboutUsData as AboutUs);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAboutUs();
+  }, []);
+
+  const formatHeading = (heading: string) => {
+    if (heading.includes(" and ")) {
+      const parts = heading.split(" and ");
+      return (
+        <div className="text-center">
+          <div>{parts[0].trim()}</div>
+          <div className="text-lg font-medium my-2">and</div>
+          <div>{parts[1].trim()}</div>
+        </div>
+      );
+    }
+    return <div className="text-center">{heading}</div>;
+  };
+
+  const formatDescription = (description: string) => {
+    return description.split('\n\n').map((paragraph, index) => (
+      <p key={index} className="mb-4 text-justify text-[#4A2C2A] leading-relaxed">
+        {paragraph.trim()}
+      </p>
+    ));
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4 bg-gradient-to-br from-[#FAF3E0] to-[#F5E6D3] min-h-screen">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-pulse text-[#B22222] text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-12 px-4 bg-gradient-to-br from-[#FAF3E0] to-[#F5E6D3] min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-12 text-center text-[#B22222] tracking-wide">
+          About Our Community
+        </h1>
+        
+        <Card className="bg-white/80 backdrop-blur-sm border-[#B22222]/30 border-2 shadow-xl rounded-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-[#B22222]/5 to-[#B22222]/10 text-center py-8">
+            <CardTitle className="text-2xl font-semibold text-[#B22222] mb-2">
+              {aboutUs?.heading ? formatHeading(aboutUs.heading) : "Loading..."}
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-8">
+            <div className="prose prose-lg max-w-none text-center">
+              {aboutUs?.description ? (
+                <div className="space-y-4">
+                  {formatDescription(aboutUs.description)}
+                </div>
+              ) : (
+                <p className="text-[#4A2C2A]">No description available.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-8 text-center">
+          <div className="inline-block w-16 h-1 bg-gradient-to-r from-[#B22222] to-[#B22222]/50 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+  );
+}

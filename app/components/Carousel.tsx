@@ -32,7 +32,7 @@ export default function Carousel() {
   }
 
   return (
-    <div className="relative w-full h-[400px] overflow-hidden bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+    <div className="relative w-full h-[400px] overflow-hidden bg-gradient-to-br from-gray-100 via-gray-50 to-gray-150">
       <AnimatePresence initial={false} custom={currentImage}>
         <motion.div
           key={currentImage}

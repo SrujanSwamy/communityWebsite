@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import Link from "next/link"
 
-import CommunityPage from "@/app/admin/about/community/page"
+import AboutUsPage from "@/app/admin/about/community/page"
 import { createClient } from "@/utils/supabase/client"
 interface ApprovalRequest {
   id: string
@@ -232,8 +232,8 @@ function AdminDashboard() {
              <Link href="/admin/about/footprints">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Footprints</Button>
             </Link>
-            <Link href="/admin/carousel">
-              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Carousel</Button>
+            <Link href="/admin/gallery">
+              <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Gallery</Button>
             </Link>
             {/* <Link href="/admin/navigation">
               <Button className="w-full bg-[#B22222] text-white hover:bg-[#8B0000]">Edit Navigation</Button>
@@ -245,7 +245,7 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <CommunityPage/>
+        <AboutUsPage/>
       </div>
     </div>
   )

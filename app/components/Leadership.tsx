@@ -35,10 +35,10 @@ const optimizeCloudinaryUrl = (url: string, width: number, height: number, quali
     return url
   }
   
-  // Add transformation parameters to Cloudinary URL
+  // Add transformation parameters to Cloudinary URL with better cropping for faces
   const parts = url.split('/upload/')
   if (parts.length === 2) {
-    return `${parts[0]}/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/${parts[1]}`
+    return `${parts[0]}/upload/w_${width},h_${height},c_fill,g_face,q_${quality},f_auto/${parts[1]}`
   }
   
   return url
@@ -149,33 +149,35 @@ export default function Leadership() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay }}
-        className="bg-[#FFF3E0] rounded-lg p-8 border-4 border-[#B22222] relative overflow-hidden"
+        className="bg-[#FFF3E0] rounded-lg p-4 sm:p-6 lg:p-8 border-4 border-[#B22222] relative overflow-hidden max-w-6xl mx-auto"
       >
         <ShivajiArtisticBg />
-        <Crown className="absolute top-4 right-4 text-[#B22222] opacity-20" size={80} />
-        <h3 className="text-xl font-bold mb-6 text-[#B22222] relative z-10 text-center">
+        <Crown className="absolute top-4 right-4 text-[#B22222] opacity-20 w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20" />
+        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 text-[#B22222] relative z-10 text-center px-2">
           {clubNames[clubType]}
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
           {sortedMembers.map((member, index) => (
             <motion.div
               key={member.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: delay + index * 0.1 }}
+              className="w-full sm:w-80 md:w-72 lg:w-80"
             >
-              <Card className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg h-80 relative group">
-                {/* Photo Background - Always Visible */}
-                <div className="absolute inset-0 h-full w-full">
+              <Card className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg relative group">
+                {/* Photo Container with better aspect ratio */}
+                <div className="relative w-full h-80 sm:h-96">
                   {member.photo_url ? (
                     <div className="relative w-full h-full">
                       <Image
-                        src={optimizeCloudinaryUrl(member.photo_url, 400, 320)}
+                        src={optimizeCloudinaryUrl(member.photo_url, 420, 510)}
                         alt={member.name || "Leadership Member"}
                         fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-contain bg-gray-50"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        priority={index < 3}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -192,24 +194,14 @@ export default function Leadership() {
                   </div>
                 </div>
 
-                {/* Position Badge - Always Visible */}
-                <div className="absolute top-3 right-3 z-10">
-                  <div className="bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center shadow-lg">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Leadership
-                  </div>
+                {/* Name and Position - Only visible on hover */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h2 className="text-xl font-bold mb-1 text-white drop-shadow-lg">{member.name || "Name not available"}</h2>
+                  <h3 className="text-base font-medium text-white/90 drop-shadow">{member.position}</h3>
                 </div>
 
-                {/* Hover Overlay with Name and Position */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                  <div className="p-4 text-white w-full">
-                    <h2 className="text-xl font-bold mb-1 drop-shadow-lg">{member.name || "Name not available"}</h2>
-                    <h3 className="text-base font-medium opacity-90 drop-shadow">{member.position}</h3>
-                  </div>
-                </div>
-
-                {/* Subtle hover indicator */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/30 transition-all duration-300 pointer-events-none"></div>
+                {/* Hover effect border */}
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#B22222]/50 transition-all duration-300 pointer-events-none"></div>
               </Card>
             </motion.div>
           ))}
@@ -224,33 +216,35 @@ export default function Leadership() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay }}
-        className="bg-[#FFF3E0] rounded-lg p-8 border-4 border-[#B22222] relative overflow-hidden"
+        className="bg-[#FFF3E0] rounded-lg p-4 sm:p-6 lg:p-8 border-4 border-[#B22222] relative overflow-hidden max-w-6xl mx-auto"
       >
         <ShivajiArtisticBg />
-        <Building2 className="absolute top-4 right-4 text-[#B22222] opacity-20" size={80} />
-        <h3 className="text-xl font-bold mb-6 text-[#B22222] relative z-10 text-center">
+        <Building2 className="absolute top-4 right-4 text-[#B22222] opacity-20 w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20" />
+        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 text-[#B22222] relative z-10 text-center">
           BUILDING COMMITTEE
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
           {buildingCommitteeData.map((member, index) => (
             <motion.div
               key={member.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: delay + index * 0.1 }}
+              className="w-full sm:w-80 md:w-72 lg:w-80"
             >
-              <Card className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg h-80 relative group">
-                {/* Photo Background - Always Visible */}
-                <div className="absolute inset-0 h-full w-full">
+              <Card className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg relative group">
+                {/* Photo Container with better aspect ratio */}
+                <div className="relative w-full h-80 sm:h-96">
                   {member.photo ? (
                     <div className="relative w-full h-full">
                       <Image
-                        src={optimizeCloudinaryUrl(member.photo, 400, 320)}
+                        src={optimizeCloudinaryUrl(member.photo, 400, 500)}
                         alt={member.name || "Building Committee Member"}
                         fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-contain bg-gray-50"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        priority={index < 3}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -267,24 +261,14 @@ export default function Leadership() {
                   </div>
                 </div>
 
-                {/* Committee Badge - Always Visible */}
-                <div className="absolute top-3 right-3 z-10">
-                  <div className="bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center shadow-lg">
-                    <Building2 className="w-3 h-3 mr-1" />
-                    Committee
-                  </div>
+                {/* Name and Position - Only visible on hover */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h2 className="text-xl font-bold mb-1 text-white drop-shadow-lg">{member.name || "Name not available"}</h2>
+                  <h3 className="text-base font-medium text-white/90 drop-shadow">President</h3>
                 </div>
 
-                {/* Hover Overlay with Name and Designation */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                  <div className="p-4 text-white w-full">
-                    <h2 className="text-xl font-bold mb-1 drop-shadow-lg">{member.name || "Name not available"}</h2>
-                    <h3 className="text-base font-medium opacity-90 drop-shadow">{member.designation}</h3>
-                  </div>
-                </div>
-
-                {/* Subtle hover indicator */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/30 transition-all duration-300 pointer-events-none"></div>
+                {/* Hover effect border */}
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#B22222]/50 transition-all duration-300 pointer-events-none"></div>
               </Card>
             </motion.div>
           ))}
@@ -296,7 +280,7 @@ export default function Leadership() {
   if (loading) {
     return (
       <section className="container mx-auto my-8 px-4">
-        <div className="bg-[#FFF3E0] rounded-lg p-8 border-4 border-[#B22222] text-center">
+        <div className="bg-[#FFF3E0] rounded-lg p-8 border-4 border-[#B22222] text-center max-w-4xl mx-auto">
           <p className="text-[#B22222] text-lg">Loading leadership team...</p>
         </div>
       </section>
@@ -305,7 +289,7 @@ export default function Leadership() {
 
   return (
     <section className="container mx-auto my-8 px-4">
-      <div className="space-y-12">
+      <div className="space-y-8 lg:space-y-12">
         {firstClubMembers.length > 0 && (
           <LeadershipCard 
             members={firstClubMembers} 
@@ -326,16 +310,6 @@ export default function Leadership() {
           <BuildingCommitteeCard delay={0.6} />
         )}
 
-        {leadershipData.length === 0 && buildingCommitteeData.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-[#FFF3E0] rounded-lg p-8 border-4 border-[#B22222] text-center"
-          >
-            <p className="text-gray-800 text-lg">No leadership data available at this time.</p>
-          </motion.div>
-        )}
       </div>
     </section>
   );

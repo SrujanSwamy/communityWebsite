@@ -275,19 +275,7 @@ export default function ContactUsPage() {
                   </div>
 
                   {/* Office Hours (placeholder - you can add this to database later) */}
-                  <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm">
-                    <div className="bg-[#B22222] p-3 rounded-full">
-                      <Clock className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Office Hours</p>
-                      <div className="text-gray-700 space-y-1 mt-1">
-                        <p>Monday - Friday: 10:00 AM - 6:00 PM</p>
-                        <p>Saturday: 10:00 AM - 4:00 PM</p>
-                        <p className="text-[#B22222] font-medium">Sunday: Closed</p>
-                      </div>
-                    </div>
-                  </div>
+                 
                 </div>
               </div>
 

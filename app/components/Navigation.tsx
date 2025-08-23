@@ -128,6 +128,11 @@ export default function Navigation() {
                     Executive Committee
                   </Link>
                 </DropdownMenuItem>
+                 <DropdownMenuItem className="hover:bg-[#FFE4B5] hover:text-[#ECCEA9] transition-colors">
+                  <Link href="/about/BuildingCommittee" className="w-full">
+                    Building Committee
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             
@@ -158,11 +163,7 @@ export default function Navigation() {
                     Deceased Members
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-[#FFE4B5] hover:text-[#ECCEA9] transition-colors">
-                  <Link href="/about/BuildingCommittee" className="w-full">
-                    Building Committee
-                  </Link>
-                </DropdownMenuItem>
+               
                 <DropdownMenuItem className="border-t border-[#ECCEA9] mt-2 pt-2 hover:bg-[#FFE4B5] hover:text-[#ECCEA9] transition-colors">
                   <Link href="/membership" className="w-full font-semibold  hover:text-[#8B4513] transition-colors">
                     ✨ Become a Member
@@ -190,6 +191,12 @@ export default function Navigation() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Link href="/gallery" passHref>
+              <Button variant="outline" className="bg-[#FFF8DC] text-[#8B4513] border-2 border-[#CD853F] hover:bg-[#FFE4B5] hover:text-[#D2691E] hover:border-[#D2691E] shadow-md transition-all duration-200 hover:shadow-lg">
+                Gallery
+              </Button>
+            </Link>
             
             <Link href="/donors" passHref>
               <Button variant="outline" className="bg-[#FFF8DC] text-[#8B4513] border-2 border-[#CD853F] hover:bg-[#FFE4B5] hover:text-[#D2691E] hover:border-[#D2691E] shadow-md transition-all duration-200 hover:shadow-lg">
@@ -279,6 +286,11 @@ export default function Navigation() {
                       Executive Committee
                     </Button>
                   </Link>
+                  <Link href="/about/BuildingCommittee" className="block" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-[#8B4513] hover:bg-[#CD853F] transition-all duration-200 text-sm">
+                      Building Committee
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
@@ -306,11 +318,7 @@ export default function Navigation() {
                       Deceased Members
                     </Button>
                   </Link>
-                  <Link href="/about/BuildingCommittee" className="block" onClick={closeMobileMenu}>
-                    <Button variant="ghost" className="w-full justify-start text-[#8B4513] hover:bg-[#CD853F] transition-all duration-200 text-sm">
-                      Building Committee
-                    </Button>
-                  </Link>
+                  
                   <Link href="/membership" className="block" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start text-[#8B4513] hover:bg-[#CD853F] transition-all duration-200 text-sm font-semibold">
                        Become a Member
@@ -335,6 +343,12 @@ export default function Navigation() {
                   </Link>
                 </div>
               </div>
+
+               <Link href="/gallery" passHref>
+              <Button variant="outline" className="bg-[#FFF8DC] text-[#8B4513] border-2 border-[#CD853F] hover:bg-[#FFE4B5] hover:text-[#D2691E] hover:border-[#D2691E] shadow-md transition-all duration-200 hover:shadow-lg">
+                Gallery
+              </Button>
+            </Link>
 
               <Link href="/donors" className="block" onClick={closeMobileMenu}>
                 <Button variant="ghost" className="w-full justify-start text-[#8B4513] hover:bg-[#CD853F] transition-all duration-200">

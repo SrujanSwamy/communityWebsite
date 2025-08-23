@@ -27,10 +27,10 @@ const optimizeCloudinaryUrl = (url: string, width: number, height: number, quali
     return url
   }
   
-  // Add transformation parameters to Cloudinary URL
+  // Add transformation parameters to Cloudinary URL with face detection
   const parts = url.split('/upload/')
   if (parts.length === 2) {
-    return `${parts[0]}/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/${parts[1]}`
+    return `${parts[0]}/upload/w_${width},h_${height},c_fill,g_face,q_${quality},f_auto/${parts[1]}`
   }
   
   return url
@@ -181,29 +181,31 @@ export default function ExecutiveMembersPage() {
           </p>
         </div>
 
-        {/* Members Grid */}
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Members Grid - Centered Layout */}
+        <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
           {filteredMembers.map((member, index) => (
             <motion.div
               key={member.id}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="w-full sm:w-80 md:w-72 lg:w-80"
             >
               <Card
-                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg h-80 relative group"
+                className="bg-white border-2 border-[#B22222] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg relative group"
                 onClick={() => setSelectedMember(member)}
               >
-                {/* Photo Background - Always Visible */}
-                <div className="absolute inset-0 h-full w-full">
+                {/* Photo Container with better aspect ratio */}
+                <div className="relative w-full h-80 sm:h-96">
                   {member.photo ? (
                     <div className="relative w-full h-full">
                       <Image
-                        src={optimizeCloudinaryUrl(member.photo, 400, 320)}
+                        src={optimizeCloudinaryUrl(member.photo, 420, 510)}
                         alt={member.name || "Executive Member"}
                         fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        className="object-contain bg-[#FFF9E6]"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        priority={index < 8}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -220,15 +222,8 @@ export default function ExecutiveMembersPage() {
                   </div>
                 </div>
 
-                {/* Executive Badge - Always Visible */}
-                <div className="absolute top-3 right-3 z-10">
-                  <div className="bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center shadow-lg">
-                    <Users className="w-3 h-3 mr-1" />
-                    Executive
-                  </div>
-                </div>
-
-                {/* Hover Overlay with Name and Position */}
+               
+                {/* Hover Overlay with Name and Position - Only visible on hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                   <div className="p-4 text-white w-full">
                     <h2 className="text-xl font-bold mb-1 drop-shadow-lg">{member.name}</h2>
@@ -236,8 +231,8 @@ export default function ExecutiveMembersPage() {
                   </div>
                 </div>
 
-                {/* Subtle hover indicator */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/30 transition-all duration-300 pointer-events-none"></div>
+                {/* Hover effect border */}
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#B22222]/50 transition-all duration-300 pointer-events-none"></div>
               </Card>
             </motion.div>
           ))}
@@ -369,14 +364,6 @@ export default function ExecutiveMembersPage() {
                       <p className="text-base leading-relaxed">{selectedMember.achivements}</p>
                     </div>
                   )}
-                  
-                  {/* Executive Committee Badge */}
-                  <div className="flex items-center justify-center pt-4">
-                    <div className="bg-[#B22222] text-white px-4 py-2 rounded-full flex items-center">
-                      <Users className="w-4 h-4 mr-2" />
-                      <span>Executive Committee Member</span>
-                    </div>
-                  </div>
                 </DialogDescription>
               </DialogHeader>
             </DialogContent>
@@ -384,5 +371,5 @@ export default function ExecutiveMembersPage() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
