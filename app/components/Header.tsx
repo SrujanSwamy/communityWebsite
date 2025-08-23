@@ -41,7 +41,7 @@ export default function Header() {
                 AND
               </p>
               <h2 style={{fontSize: 'clamp(1.125rem, 4vw, 1.565rem)'}} className="drop-shadow-md">
-                MARATI WOMEN'S CLUB, MANGALORE
+                MARATI MAHILA VEDIKE, MANGALORE
               </h2>
             </Link>
           </div>

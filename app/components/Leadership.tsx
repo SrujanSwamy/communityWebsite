@@ -27,7 +27,7 @@ interface BuildingCommitteeMember {
 
 const clubNames: { [key: number]: string } = {
   1: "D.K. DISTRICT MARATI SAMAJA SEVA SANGHA ® MANGALORE",
-  2: "MARATI WOMEN'S CLUB, MANGALORE",
+  2: "MARATI MAHILA VEDIKE, MANGALORE",
 };
 
 const optimizeCloudinaryUrl = (url: string, width: number, height: number, quality: string = "auto") => {
