@@ -54,9 +54,9 @@ export default function MembershipPage() {
     const { email } = formData;
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: undefined,
-      },
+      // options: {
+      //   emailRedirectTo: undefined,
+      // },
     });
     if (error) {
       toast({

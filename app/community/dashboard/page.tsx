@@ -48,7 +48,8 @@ export default function CommunityDashboard() {
           .from('admins')
           .select('*')
           .eq('email', user.email)
-          .single()
+          .limit(1)
+          .maybeSingle()
 
         if (adminData) {
           // User is admin, redirect to admin dashboard

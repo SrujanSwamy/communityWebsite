@@ -48,8 +48,10 @@ export default function AdminLoginPage() {
         .from('admins')
         .select('*')
         .eq('email', email)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
+        
       if (adminError || !adminData) {
        
         await supabase.auth.signOut();

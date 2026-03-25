@@ -30,7 +30,7 @@ const supabase = createServerClient(
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
+  
   // Public routes that don't require authentication
   const publicRoutes = ['/login/user', '/login/admin', '/auth']
   const isPublicRoute = publicRoutes.some(route => 
@@ -52,8 +52,9 @@ const supabase = createServerClient(
         .from('admins') // Assuming you have an admins table
         .select('*')
         .eq('email', user.email)
-        .single()
-
+        .limit(1)
+        .maybeSingle()
+      
       const url = request.nextUrl.clone()
       if (adminData) {
         url.pathname = '/admin/dashboard'
