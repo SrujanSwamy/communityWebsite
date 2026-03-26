@@ -31,36 +31,36 @@ export default function AboutUsPage() {
   const fetchAboutData = async () => {
     setLoading(true);
     try {
-      console.log("Fetching about data...");
+
       
       const { data, error } = await supabase
         .from("AboutUs")
         .select("*")
         .maybeSingle(); // Use maybeSingle() instead of single() to handle no rows gracefully
 
-      console.log("Fetch result:", { data, error });
+
 
       if (error) {
-        console.error("Error fetching about data:", error);
+
         toast({
           title: "Error",
           description: `Failed to fetch about information: ${error.message}`,
           variant: "destructive",
         });
       } else if (data) {
-        console.log("Setting data:", data);
+
         setAboutData(data);
         setHeading(data.heading || "");
         setAboutContent(data.description || "");
       } else {
-        console.log("No existing data found, starting fresh");
+
         // No existing data, start with empty form
         setAboutData(null);
         setHeading("");
         setAboutContent("");
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+
       toast({
         title: "Error",
         description: "An unexpected error occurred while fetching data",
@@ -89,12 +89,12 @@ export default function AboutUsPage() {
         description: aboutContent.trim(),
       };
 
-      console.log("Updating with data:", updateData);
+
 
       let result;
       if (aboutData?.id) {
         // Update existing record
-        console.log("Updating existing record with ID:", aboutData.id);
+
         result = await supabase
           .from("AboutUs")
           .update(updateData)
@@ -103,7 +103,7 @@ export default function AboutUsPage() {
           .single();
       } else {
         // Insert new record
-        console.log("Inserting new record");
+
         result = await supabase
           .from("AboutUs")
           .insert([updateData])
@@ -111,17 +111,17 @@ export default function AboutUsPage() {
           .single();
       }
 
-      console.log("Operation result:", result);
+
 
       if (result.error) {
-        console.error("Database operation error:", result.error);
+
         toast({
           title: "Error",
           description: `Failed to save: ${result.error.message}`,
           variant: "destructive",
         });
       } else if (result.data) {
-        console.log("Successfully saved:", result.data);
+
         setAboutData(result.data);
         toast({
           title: "Success",

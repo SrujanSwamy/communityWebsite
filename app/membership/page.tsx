@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 export default function MembershipPage() {
   const router = useRouter();
   const supabase = createClient();
+  const RESEND_SECONDS = 60;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -43,6 +44,8 @@ export default function MembershipPage() {
   const [verifyingEmailOtp,setIsVerifyingEmailOtp]=useState(false);
   const [wrongEmailOTP,setIsWrongEmailOTP]=useState(false);
   const [wrongPhoneOTP,setIsWrongPhoneOTP]=useState(false);
+  const [emailResendIn, setEmailResendIn] = useState(0);
+  const [phoneResendIn, setPhoneResendIn] = useState(0);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,9 +57,9 @@ export default function MembershipPage() {
     const { email } = formData;
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      // options: {
-      //   emailRedirectTo: undefined,
-      // },
+      options: {
+        emailRedirectTo: undefined,
+      },
     });
     if (error) {
       toast({
@@ -68,6 +71,7 @@ export default function MembershipPage() {
     }
     setEmailOTPSent(true);
     setSendingEmailOtp(false);
+    setEmailResendIn(RESEND_SECONDS);
 
    
   };
@@ -105,6 +109,7 @@ export default function MembershipPage() {
       //setServerGeneratedPhoneOTP(data.otp);
       setPhoneOTPSent(true);
       setSendingPhoneOtp(false);
+      setPhoneResendIn(RESEND_SECONDS);
       toast({
         title: "OTP Sent",
         description: `OTP sent to ${formData.phone}`,
@@ -115,6 +120,7 @@ export default function MembershipPage() {
         description: "Failed to send OTP",
         variant: "destructive",
       });
+      setSendingPhoneOtp(false);
     }
   };
 
@@ -158,7 +164,7 @@ export default function MembershipPage() {
         });
 
       if (error) {
-        console.error("Error uploading file:", error);
+
         toast({
           title: "Upload Error",
           description: `Failed to upload ${file.name}: ${error.message}`,
@@ -174,7 +180,7 @@ export default function MembershipPage() {
 
       return publicUrl;
     } catch (error) {
-      console.error("Unexpected error during upload:", error);
+
       return null;
     }
   };
@@ -274,7 +280,7 @@ export default function MembershipPage() {
         return;
       }
 
-      console.log("Application submitted successfully:", applicantData);
+
 
       toast({
         title: "Application Submitted",
@@ -284,7 +290,7 @@ export default function MembershipPage() {
 
       router.push("/membership/success");
     } catch (error) {
-      console.error("An error occurred during the submission process:", error);
+
       toast({
         title: "Submission Error",
         description: "An unexpected error occurred. Please try again.",
@@ -312,6 +318,26 @@ export default function MembershipPage() {
 
   }
 }, [wrongEmailOTP,wrongPhoneOTP]);
+
+  useEffect(() => {
+    if (emailResendIn <= 0) {
+      return undefined;
+    }
+    const timer = setInterval(() => {
+      setEmailResendIn((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [emailResendIn]);
+
+  useEffect(() => {
+    if (phoneResendIn <= 0) {
+      return undefined;
+    }
+    const timer = setInterval(() => {
+      setPhoneResendIn((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phoneResendIn]);
 
   return (
     <div className="min-h-screen bg-[#FFF9E6] py-8 px-4">
@@ -364,10 +390,21 @@ export default function MembershipPage() {
               <Button
                 type="button"
                 onClick={handleSendEmailOTP}
-                disabled={emailOTPSent || isEmailVerified || !formData.email}
+                disabled={
+                  sendingEmailOtp ||
+                  isEmailVerified ||
+                  !formData.email ||
+                  emailResendIn > 0
+                }
                 className="bg-[#B22222] text-white hover:bg-[#8B0000]"
               >
-                {emailOTPSent ? "Sent" : sendingEmailOtp ? "Sending..." : "Send OTP"}
+                {sendingEmailOtp
+                  ? "Sending..."
+                  : emailResendIn > 0
+                  ? `Resend in ${emailResendIn}s`
+                  : emailOTPSent
+                  ? "Resend OTP"
+                  : "Send OTP"}
               </Button>
             </div>
           </div>
@@ -382,7 +419,7 @@ export default function MembershipPage() {
                 value={formData.emailOtp}
                 onChange={handleInputChange}
                 type="number"
-                placeholder="Enter 6-digit OTP sent to your email"
+                placeholder="Enter OTP sent to your email"
                 required
                 className="border-[#B22222]"
               />
@@ -395,9 +432,7 @@ export default function MembershipPage() {
                 onClick={() => {
                   handleVerifyEmailOTP();
                 }}
-                disabled={
-                  verifyingEmailOtp || isEmailVerified || formData.emailOtp.length !== 6
-                }
+                disabled={verifyingEmailOtp || isEmailVerified || !formData.emailOtp}
                 className="bg-[#B22222] text-white hover:bg-[#8B0000]"
               >
                 {isEmailVerified
@@ -428,10 +463,21 @@ export default function MembershipPage() {
                 onClick={() => {
                   handleSendPhoneOTP();
                 }}
-                disabled={phoneOTPSent || sendingPhoneOtp || !formData.phone}
+                disabled={
+                  sendingPhoneOtp ||
+                  !formData.phone ||
+                  phoneResendIn > 0 ||
+                  isPhoneVerified
+                }
                 className="bg-[#B22222] text-white hover:bg-[#8B0000]"
               >
-                {phoneOTPSent ? "Sent" : sendingPhoneOtp ? "Sending..." : "Send OTP"}
+                {sendingPhoneOtp
+                  ? "Sending..."
+                  : phoneResendIn > 0
+                  ? `Resend in ${phoneResendIn}s`
+                  : phoneOTPSent
+                  ? "Resend OTP"
+                  : "Send OTP"}
               </Button>
             </div>
           </div>
@@ -446,7 +492,7 @@ export default function MembershipPage() {
                 value={formData.otp}
                 onChange={handleInputChange}
                 type="number"
-                placeholder="Enter 6-digit OTP sent to your number"
+                placeholder="Enter OTP sent to your number"
                 required
                 className="border-[#B22222]"
               />
@@ -459,9 +505,7 @@ export default function MembershipPage() {
                 onClick={() => {
                   handleVerifyPhoneOTP();
                 }}
-                disabled={
-                  verifyingPhoneOtp || isPhoneVerified || formData.otp.length !== 6
-                }
+                disabled={verifyingPhoneOtp || isPhoneVerified || !formData.otp}
                 className="bg-[#B22222] text-white hover:bg-[#8B0000]"
               >
                 {isPhoneVerified

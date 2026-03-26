@@ -7,7 +7,7 @@ const client = TwilioClient();
 const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID!;
 
 export async function POST(req: NextRequest, res: NextResponse) {
-  console.log("Request method:", req.method);
+
   
   if (req.method !== 'POST') {
     return NextResponse.json({ success:false,message: 'Method Not Allowed' },{status:405});
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       return NextResponse.json({ success: false, message: 'Invalid OTP' },{status:200});
     }
   } catch (error:any) {
-    console.error("OTP verification failed:", error);
+
     return NextResponse.json({success:false,message: error.message|| 'Verification failed' },{status:500});
   }
 }

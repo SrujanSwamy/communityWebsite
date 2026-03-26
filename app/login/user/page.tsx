@@ -47,7 +47,7 @@ export default function LoginPage() {
       const field = method === "phone_no" ? "phone_no" : "email_id";
       const original_input = inputValue;
       const trimmed_number = inputValue.trim().replace("+91", "");
-      console.log(trimmed_number+" "+ inputValue);
+
       const { data, error } = await supabase
         .from("Members")
         .select("*")
@@ -55,7 +55,7 @@ export default function LoginPage() {
         .limit(1)
         .maybeSingle();
 
-      console.log("Member Check:", { data, error });  
+
       if (error || !data) {
         setIsMemberExist(false);
         toast({
@@ -74,7 +74,7 @@ export default function LoginPage() {
           : await supabase.auth.signInWithOtp({ email: inputValue });
 
       if (otpResponse.error) {
-        console.error("OTP Error:", otpResponse.error);
+
         toast({
           title: "OTP Error",
           description: otpResponse.error.message,

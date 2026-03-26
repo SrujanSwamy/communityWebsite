@@ -58,7 +58,7 @@ export default function Leadership() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      console.log("Fetching all data...");
+
       
       // Fetch leadership data
       const { data: leadershipData, error: leadershipError } = await supabase
@@ -72,12 +72,7 @@ export default function Leadership() {
         .select("*")
         .order("id", { ascending: true });
 
-      console.log("Supabase response:", { 
-        leadershipData, 
-        leadershipError, 
-        buildingCommitteeData, 
-        buildingCommitteeError 
-      });
+
 
       if (leadershipError) {
         console.error("Leadership data error:", leadershipError);
@@ -85,26 +80,26 @@ export default function Leadership() {
           title: "Error",
           description: `Failed to fetch leadership data: ${leadershipError.message}`,
           variant: "destructive",
-        });
+
       } else if (leadershipData) {
-        console.log("Leadership data received:", leadershipData);
+
         setLeadershipData(leadershipData);
       }
 
       if (buildingCommitteeError) {
-        console.error("Building committee data error:", buildingCommitteeError);
+
         toast({
           title: "Error",
           description: `Failed to fetch building committee data: ${buildingCommitteeError.message}`,
           variant: "destructive",
         });
       } else if (buildingCommitteeData) {
-        console.log("Building committee data received:", buildingCommitteeData);
+
         setBuildingCommitteeData(buildingCommitteeData);
       }
 
     } catch (error) {
-      console.error("Fetch error:", error);
+
       toast({
         title: "Error",
         description: "An unexpected error occurred while fetching data",

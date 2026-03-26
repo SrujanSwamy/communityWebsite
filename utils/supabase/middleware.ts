@@ -48,6 +48,7 @@ const supabase = createServerClient(
     // If user is authenticated but on login pages, redirect based on user type
     try {
       // Check if user is admin by checking admin table
+      console.log("Checking admin status for user:", user.email);
       const { data: adminData } = await supabase
         .from('admins') // Assuming you have an admins table
         .select('*')

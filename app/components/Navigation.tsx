@@ -38,7 +38,8 @@ export default function Navigation() {
           .from('admins')
           .select('*')
           .eq('email', user.email)
-          .single()
+          .limit(1)
+          .maybeSingle()
 
         setIsAdmin(!!adminData)
       } catch (error) {

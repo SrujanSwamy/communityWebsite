@@ -55,68 +55,32 @@ export default function NewMembersRequestsPage() {
   };
 
   const handleApproveRequest = async (id: number) => {
-    // In a real application, you would send this to your backend
-    //fetching the record whch admin approved
-    const { data: sourceData, error: sourceError } = await supabase
-      .from("Applicants")
-      .select(
-        "name,email_id,phone_no,profession,street,city,state,country,pincode,documents"
-      )
-      .eq("id", id);
+    try {
+      const response = await fetch('/api/admin/approve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
 
-    if (sourceError) {
-      toast({
-        title: "Error",
-        description: "Failed to Approve request.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const password = generateRandomPassword();
+      const result = await response.json();
 
-    const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
-        email: sourceData[0].email_id,
-        password,
-        email_confirm: true,
-      });
-    if (authError) {
-      toast({
-        title: "Error",
-        description: "Failed to create auth user.",
-        variant: "destructive",
-      });
-      return;
-    }
-    //transferring the record from Applicants table to the Members Table
-    const { data: insertData, error: insertError } = await supabase
-      .from("Members")
-      .insert(sourceData);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to approve request.');
+      }
 
-    if (insertError) {
-      toast({
-        title: "Error",
-        description: "Failed to Approve request.",
-        variant: "destructive",
-      });
-      return;
-    }
-    //Deleting the record from Applicants table
-    const { error } = await supabase.from("Applicants").delete().eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to Approve request.",
-        variant: "destructive",
-      });
-      return;
-    } else {
       toast({
         title: "Success",
         description: "Request approved successfully.",
       });
-      fetchApplicants();
+      fetchApplicants(); // Refresh the list
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 

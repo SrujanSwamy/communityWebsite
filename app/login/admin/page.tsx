@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
         .maybeSingle();
 
         
-      if (adminError || !adminData) {
+      if (adminError || !adminData) { 
        
         await supabase.auth.signOut();
         toast({
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
       setTimeout(() => {
         router.push("/admin/dashboard");
         router.refresh();
-      }, 1000);
+      }, 2000);
 
     } catch (error) {
       toast({
